@@ -38,17 +38,18 @@ func (m ModelType) String() string {
 // clone engine
 func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 	var opts []*options.DatabaseOptions
-	if e.opt.DatabaseOpt != nil {
-		opts = append(opts, e.opt.DatabaseOpt)
+	if e.engineOption.DatabaseOpt != nil {
+		opts = append(opts, e.engineOption.DatabaseOpt)
 	}
 	engine := &Engine{
-		opt:             e.opt,
+		engineOption:    e.engineOption,
 		client:          e.client,
 		strPkName:       e.strPkName,
 		dbTags:          e.dbTags,
 		strDatabaseName: strDatabaseName,
 		models:          make([]interface{}, 0),
 		dict:            make(map[string]interface{}),
+		filter:          make(map[string]interface{}),
 		db:              e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
@@ -103,9 +104,13 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 				elemVal := reflect.New(elemTyp).Elem()
 				if typ.Kind() == reflect.Slice && val.IsNil() {
 					val.Set(reflect.MakeSlice(elemVal.Type(), 0, 0))
-				}
-				for j:= 0; j < val.Len(); j++ {
-					e.models = append(e.models, val.Index(j).Interface()) //append elements to the models
+					if len(e.models) == 0 && len(models) != 0 {//used to fetch records
+						e.models = models
+					}
+				} else {
+					for j:= 0; j < val.Len(); j++ {//used to insert/update records
+						e.models = append(e.models, val.Index(j).Interface()) //append elements to the models
+					}
 				}
 			} else if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
 				e.models = append(e.models, v) //map, struct or slice
@@ -168,6 +173,13 @@ func (e *Engine) setModelType(modelType ModelType) {
 
 func (e *Engine) setTableName(strNames ...string) {
 	e.strTableName = strings.Join(strNames, ",")
+}
+
+func (e *Engine) clean() {
+	e.options = nil
+	e.models = nil
+	e.modelType = 0
+	e.selected = false
 }
 
 //assert bool and string/struct/slice/map nil, call panic

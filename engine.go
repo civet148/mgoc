@@ -3,10 +3,25 @@ package mgoc
 import (
 	"context"
 	"github.com/civet148/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"time"
+)
+
+const (
+	keyIn           = "$in"
+	keyEqual        = "$eq"
+	keyAnd          = "$and"
+	keyOr           = "$or"
+	keyGreaterThan  = "$gt"
+	keyGreaterEqual = "$gte"
+	keyLessThan     = "$lt"
+	keyLessEqual    = "$lte"
+	keyNotEqual     = "$ne"
+	keyExists       = "$exists"
+	keyRegex        = "$regex"
 )
 
 const (
@@ -16,7 +31,7 @@ const (
 	defaultPrimaryKeyName        = "_id" // database primary key name
 )
 
-type Option struct {
+type EngineOption struct {
 	Debug          bool                     // enable debug mode
 	Max            int                      // max active connections
 	Idle           int                      // max idle connections
@@ -28,7 +43,8 @@ type Option struct {
 }
 
 type Engine struct {
-	opt             *Option                // option for the engine
+	engineOption    *EngineOption          // option for the engine
+	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
 	client          *mongo.Client          // mongodb client
 	db              *mongo.Database        // database instance
 	strDatabaseName string                 // database name
@@ -40,9 +56,10 @@ type Engine struct {
 	selected        bool                   // already selected, just append it
 	selectColumns   []string               // columns to query: select
 	dbTags          []string               // custom db tag names
+	filter          bson.M                 // mongodb filter
 }
 
-func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
+func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
 	var opt = makeOption(opts...)
 	ctx, cancel := ContextWithTimeout(opt.ConnectTimeout)
 	defer cancel()
@@ -61,23 +78,24 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	}
 	db := client.Database(ui.Database)
 	return &Engine{
-		opt:             opt,
+		engineOption:    opt,
 		db:              db,
 		client:          client,
 		strDatabaseName: ui.Database,
 		strPkName:       defaultPrimaryKeyName,
 		models:          make([]interface{}, 0),
 		dict:            make(map[string]interface{}),
+		filter:          make(map[string]interface{}),
 		dbTags:          dbTags,
 	}, nil
 }
 
-func makeOption(opts ...*Option) *Option {
-	var opt *Option
+func makeOption(opts ...*EngineOption) *EngineOption {
+	var opt *EngineOption
 	if len(opts) != 0 {
 		opt = opts[0]
 	} else {
-		opt = &Option{
+		opt = &EngineOption{
 			ConnectTimeout: defaultConnectTimeoutSeconds,
 			WriteTimeout:   defaultWriteTimeoutSeconds,
 			ReadTimeout:    defaultReadTimeoutSeconds,
@@ -127,12 +145,39 @@ func (e *Engine) Select(strColumns ...string) *Engine {
 	return e
 }
 
+// Options set operation options for find/update/delete/insert...
+func (e *Engine) Options(options ...interface{}) *Engine {
+	e.options = options
+	return e
+}
+
 // orm query
 // return rows affected and error, if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
-func (e *Engine) Query() (rowsAffected int64, err error) {
+func (e *Engine) Query() (err error) {
 	assert(e.models, "query model is nil")
 	assert(e.strTableName, "table name not set")
+	if len(e.models) == 0 {
+		return log.Errorf("no model to fetch records")
+	}
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.FindOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.FindOptions))
+	}
+	var cur *mongo.Cursor
+	log.Json("filter", e.filter)
+	cur, err = col.Find(ctx, e.filter, opts...)
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	err = cur.All(ctx, e.models[0])
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
 	return
 }
 
@@ -142,18 +187,27 @@ func (e *Engine) Insert() ([]interface{}, error) {
 	if len(e.models) == 0 {
 		return nil, log.Errorf("no document to insert")
 	}
+	defer e.clean()
 	var ids []interface{}
-	ctx, cancel := ContextWithTimeout(e.opt.WriteTimeout)
+	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	if e.modelType == ModelType_Slice {
-		res, err := col.InsertMany(ctx, e.models)
+		var opts []*options.InsertManyOptions
+		for _, opt := range e.options {
+			opts = append(opts, opt.(*options.InsertManyOptions))
+		}
+		res, err := col.InsertMany(ctx, e.models, opts...)
 		if err != nil {
 			return nil, log.Errorf(err.Error())
 		}
 		ids = res.InsertedIDs
 	} else {
-		res, err := col.InsertOne(ctx, e.models[0])
+		var opts []*options.InsertOneOptions
+		for _, opt := range e.options {
+			opts = append(opts, opt.(*options.InsertOneOptions))
+		}
+		res, err := col.InsertOne(ctx, e.models[0], opts...)
 		if err != nil {
 			return nil, log.Errorf(err.Error())
 		}
@@ -164,7 +218,7 @@ func (e *Engine) Insert() ([]interface{}, error) {
 
 // Update update records
 //func (e *Engine) Update(strName string) ([]interface{}, error) {
-//	ctx, cancel := ContextWithTimeout(e.opt.WriteTimeout)
+//	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
 //	defer cancel()
 //	col := e.Collection(e.strTableName)
 //	res, err := col.UpdateMany(ctx, objects)
@@ -173,45 +227,82 @@ func (e *Engine) Insert() ([]interface{}, error) {
 //	}
 //}
 
-// orm where condition
-//func (e *Engine) Where(strWhere string, args ...interface{}) *Engine {
-//	assert(strWhere, "string is nil")
-//	//strWhere = e.formatString(strWhere, args...)
-//	//e.setWhere(strWhere)
-//	return e
-//}
-
-func (e *Engine) And(strColumn string, args ...interface{}) *Engine {
-	//e.andConditions = append(e.andConditions, e.formatString(strColumn, args...))
+//orm where condition
+func (e *Engine) Filter(filter bson.M) *Engine {
+	assert(filter, "filter cannot be nil")
+	e.filter = filter
 	return e
 }
 
-func (e *Engine) Or(strColumn string, args ...interface{}) *Engine {
-	//e.orConditions = append(e.orConditions, e.formatString(strColumn, args...))
+func (e *Engine) In(strColumn string, value interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		keyIn: value,
+	}
+	return e
+}
+
+func (e *Engine) And(value bson.A) *Engine {
+	e.filter[keyAnd] = value
+	return e
+}
+
+func (e *Engine) Or(value bson.A) *Engine {
+	e.filter[keyOr] = value
 	return e
 }
 
 func (e *Engine) Equal(strColumn string, value interface{}) *Engine {
-	//e.And("%s='%v'", strColumn, value)
+	e.filter[strColumn] = bson.M{
+		keyEqual: value,
+	}
+	return e
+}
+
+func (e *Engine) NotEqual(strColumn string, value interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		keyNotEqual: value,
+	}
 	return e
 }
 
 func (e *Engine) GreaterThan(strColumn string, value interface{}) *Engine {
-	//e.And("%s>'%v'", strColumn, value)
+	e.filter[strColumn] = bson.M{
+		keyGreaterThan: value,
+	}
 	return e
 }
 
 func (e *Engine) GreaterEqual(strColumn string, value interface{}) *Engine {
-	//e.And("%s>='%v'", strColumn, value)
+	e.filter[strColumn] = bson.M{
+		keyGreaterEqual: value,
+	}
 	return e
 }
 
 func (e *Engine) LessThan(strColumn string, value interface{}) *Engine {
-	//e.And("%s<'%v'", strColumn, value)
+	e.filter[strColumn] = bson.M{
+		keyLessThan: value,
+	}
 	return e
 }
 
 func (e *Engine) LessEqual(strColumn string, value interface{}) *Engine {
-	//e.And("%s<='%v'", strColumn, value)
+	e.filter[strColumn] = bson.M{
+		keyLessEqual: value,
+	}
+	return e
+}
+
+func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		keyRegex: value,
+	}
+	return e
+}
+
+func (e *Engine) Exists(strColumn string, value bool) *Engine {
+	e.filter[strColumn] = bson.M{
+		keyExists: value,
+	}
 	return e
 }
