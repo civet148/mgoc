@@ -58,6 +58,8 @@ type Engine struct {
 	selected        bool                   // already selected, just append it
 	selectColumns   []string               // columns to query: select
 	dbTags          []string               // custom db tag names
+	skip            int64                  // mongodb skip
+	limit           int64                  // mongodb limit
 	filter          bson.M                 // mongodb filter
 	updates         bson.M                 // mongodb updates
 }
@@ -159,36 +161,6 @@ func (e *Engine) Options(options ...interface{}) *Engine {
 	return e
 }
 
-// Query orm query
-// return rows affected and error, if err is not nil must be something wrong
-// NOTE: Model function is must be called before call this function
-func (e *Engine) Query() (err error) {
-	assert(e.models, "query model is nil")
-	assert(e.strTableName, "table name not set")
-	if len(e.models) == 0 {
-		return log.Errorf("no model to fetch records")
-	}
-	defer e.clean()
-	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
-	defer cancel()
-	col := e.Collection(e.strTableName)
-	var opts []*options.FindOptions
-	for _, opt := range e.options {
-		opts = append(opts, opt.(*options.FindOptions))
-	}
-	var cur *mongo.Cursor
-	e.debugJson("filter", e.filter)
-	cur, err = col.Find(ctx, e.filter, opts...)
-	if err != nil {
-		return log.Errorf(err.Error())
-	}
-	err = cur.All(ctx, e.models[0])
-	if err != nil {
-		return log.Errorf(err.Error())
-	}
-	return
-}
-
 // Insert batch insert and returns id list
 func (e *Engine) Insert() ([]interface{}, error) {
 	assert(e.strTableName, "table name not set")
@@ -257,6 +229,90 @@ func (e *Engine) Delete() (rows int64, err error) {
 		return 0, log.Errorf(err.Error())
 	}
 	return res.DeletedCount, nil
+}
+
+// Query orm query
+// return rows affected and error, if err is not nil must be something wrong
+// NOTE: Model function is must be called before call this function
+func (e *Engine) Query() (err error) {
+	assert(e.models, "query model is nil")
+	assert(e.strTableName, "table name not set")
+	if len(e.models) == 0 {
+		return log.Errorf("no model to fetch records")
+	}
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var cur *mongo.Cursor
+	opts := e.makeFindOptions()
+	e.debugJson("filter", e.filter, "options", opts)
+	cur, err = col.Find(ctx, e.filter, opts...)
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, e.models[0])
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	return
+}
+
+// Count orm count documents
+func (e *Engine) Count() (rows int64, err error) {
+	assert(e.strTableName, "table name not set")
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.CountOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.CountOptions))
+	}
+	e.debugJson("filter", e.filter, "options", opts)
+	rows, err = col.CountDocuments(ctx, e.filter, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return rows, nil
+}
+
+
+// QueryEx orm query and return total records count
+// return rows affected and error, if err is not nil must be something wrong
+// NOTE: Model function is must be called before call this function
+func (e *Engine) QueryEx() (rows int64, err error) {
+	assert(e.models, "query model is nil")
+	assert(e.strTableName, "table name not set")
+	if len(e.models) == 0 {
+		return 0, log.Errorf("no model to fetch records")
+	}
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+
+	opts := e.makeFindOptions()
+	var cur *mongo.Cursor
+	e.debugJson("filter", e.filter, "options", opts)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	rows, err = col.CountDocuments(ctx, e.filter)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	cur, err = col.Find(ctx, e.filter, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, e.models[0])
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return
 }
 
 //orm where condition
@@ -348,6 +404,14 @@ func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
 func (e *Engine) Exists(strColumn string, value bool) *Engine {
 	e.filter[strColumn] = bson.M{
 		keyExists: value,
+	}
+	return e
+}
+
+func (e *Engine) Page(pageNo, pageSize int) *Engine {
+	if pageSize != 0 {
+		e.limit = int64(pageSize)
+		e.skip = int64(pageSize * pageNo)
 	}
 	return e
 }

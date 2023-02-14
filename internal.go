@@ -183,6 +183,7 @@ func (e *Engine) setTableName(strNames ...string) {
 }
 
 func (e *Engine) clean() {
+	e.filter = make(map[string]interface{})
 	e.options = nil
 	e.models = nil
 	e.modelType = 0
@@ -218,4 +219,24 @@ func isNilOrFalse(v interface{}) bool {
 		}
 	}
 	return false
+}
+
+func (e *Engine) makeFindOptions() []*options.FindOptions {
+	var opts []*options.FindOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.FindOptions))
+	}
+	if len(opts) == 0 {
+		if e.limit != 0 {
+			opt := &options.FindOptions{}
+			opt.SetLimit(e.limit)
+			opt.SetSkip(e.skip)
+			opts = append(opts, opt)
+		}
+	} else {
+		opt := opts[0]
+		opt.SetLimit(e.limit)
+		opt.SetSkip(e.skip)
+	}
+	return opts
 }

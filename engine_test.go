@@ -35,9 +35,10 @@ func TestMongoDBCases(t *testing.T) {
 		return
 	}
 	e.Debug(true)
-	Insert(e)
+	//Insert(e)
 	Query(e)
-	Update(e)
+	//Update(e)
+	//Count(e)
 	//Delete(e)
 }
 
@@ -56,10 +57,39 @@ func Query(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
-	log.Infof("rows %d students %+v", len(students), students)
+	log.Infof("Query rows %d students %+v", len(students), students)
 	for _, student := range students {
 		log.Infof("student %+v", student)
 	}
+	var total int64
+	var students2 []*Student
+	total, err = e.Model(&students2).
+		Table(TableNameStudentInfo).
+		Page(0, 5).
+		QueryEx()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("QueryEx total %d rows %d students %+v", total, len(students2), students2)
+	//for _, student := range students {
+	//	log.Infof("student %+v", student)
+	//}
+}
+
+
+func Count(e *Engine) {
+	rows, err := e.Model().
+		Table(TableNameStudentInfo).
+		Filter(bson.M{
+			"name": "libin",
+		}).
+		Count()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("rows %d", rows)
 }
 
 func Insert(e *Engine) {
