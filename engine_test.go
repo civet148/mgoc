@@ -37,8 +37,8 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	e.Debug(true)
 	//Insert(e)
-	//Query(e)
-	Update(e)
+	Query(e)
+	//Update(e)
 	//Count(e)
 	//Delete(e)
 }
@@ -48,10 +48,10 @@ func Query(e *Engine) {
 	err := e.Model(&students).
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
-			"name": "libin",
-			//"age":  33,
+			"name": "lory",
+			//"age":  18,
 		}).
-		Equal("extra_data.id_card", "2023001").
+		//Equal("extra_data.id_card", "2023001").
 		Desc("created_time").
 		Query()
 	if err != nil {
@@ -66,7 +66,7 @@ func Query(e *Engine) {
 			log.Errorf("decode object id [%s] error [%s]", student.Id, err.Error())
 			return
 		}
-		log.Infof("student %+v oid [%s]", student, oid)
+		log.Infof("student %+v oid [%s] create time [%s]", student, oid, student.CreatedTime.Local())
 	}
 	var total int64
 	var students2 []*Student
@@ -89,7 +89,7 @@ func Count(e *Engine) {
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
-			"name": "libin",
+			"name": "lory",
 		}).
 		Count()
 	if err != nil {
@@ -101,7 +101,7 @@ func Count(e *Engine) {
 
 func Insert(e *Engine) {
 	var student = &Student{
-		Name:        "libin",
+		Name:        "john",
 		Sex:         "male",
 		Age:         33,
 		ClassNo:     "CLASS-3",
@@ -126,7 +126,7 @@ func Insert(e *Engine) {
 			},
 		},
 		{
-			Name:        "katy sky",
+			Name:        "katy",
 			Sex:         "female",
 			Age:         28,
 			ClassNo:     "CLASS-2",
@@ -149,8 +149,8 @@ func Insert(e *Engine) {
 	}
 	log.Infof("[Many] insert ids %+v", ids)
 	mapStudent := map[string]interface{}{
-		"name":     "covlaent",
-		"sex":      "female",
+		"name":     "juan",
+		"sex":      "male",
 		"age":      58,
 		"class_no": "CLASS-22",
 		"extra_data": ExtraData{
@@ -173,7 +173,7 @@ func Update(e *Engine) {
 		Filter(bson.M{
 			"_id": "63e9f16b76527645cc38a815",
 		}).
-		Set("name", "libin815").
+		Set("name", "golang2006").
 		Set("sex", "xx").
 		Update()
 	if err != nil {
@@ -188,8 +188,8 @@ func Delete(e *Engine) {
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
-			"name": "libin",
-			"age":  33,
+			"name": "lory",
+			"age":  23,
 		}).
 		Delete()
 	if err != nil {

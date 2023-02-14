@@ -367,15 +367,15 @@ func (d Decimal) MarshalBinary() (data []byte, err error) {
 	return d.dec.MarshalBinary()
 }
 
-//
-//// MarshalBSON implements the bson.Marshaler interface.
-//func (d Decimal) MarshalBSON() ([]byte, error) {
-//	return d.dec.MarshalJSON()
-//}
-//
-//func (d *Decimal) UnmarshalBSON(data []byte) error {
-//	return d.dec.UnmarshalJSON(data)
-//}
+// MarshalBSON implements the bson.Marshaler interface.
+func (d Decimal) MarshalBSON() ([]byte, error) {
+	return d.dec.MarshalJSON()
+}
+
+func (d *Decimal) UnmarshalBSON(data []byte) error {
+	return d.dec.UnmarshalJSON(data)
+}
+
 //
 // MarshalBSON implements the bson.Marshaler interface.
 //func (d Decimal) MarshalBSONValue() (bsontype.Type, []byte, error) {

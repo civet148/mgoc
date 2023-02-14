@@ -10,27 +10,6 @@ import (
 	"time"
 )
 
-const (
-	keyIn           = "$in"
-	keyEqual        = "$eq"
-	keyAnd          = "$and"
-	keyOr           = "$or"
-	keyGreaterThan  = "$gt"
-	keyGreaterEqual = "$gte"
-	keyLessThan     = "$lt"
-	keyLessEqual    = "$lte"
-	keyNotEqual     = "$ne"
-	keyExists       = "$exists"
-	keyRegex        = "$regex"
-	keySet          = "$set"
-)
-
-const (
-	defaultConnectTimeoutSeconds = 3     // connect timeout seconds
-	defaultWriteTimeoutSeconds   = 60    // write timeout seconds
-	defaultReadTimeoutSeconds    = 60    // read timeout seconds
-	defaultPrimaryKeyName        = "_id" // database primary key name
-)
 
 type EngineOption struct {
 	Debug          bool                     // enable debug mode
@@ -310,13 +289,18 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 	return
 }
 
-// Select orm select columns for filter
+// Select orm select columns for projection
 func (e *Engine) Select(strColumns ...string) *Engine {
 	if e.setSelectColumns(strColumns...) {
 		e.selected = true
 	}
 	return e
 }
+
+//func (e *Engine) Aggregate(match, group bson.M) *Engine {
+//
+//	return e
+//}
 
 // Asc orm select columns for ORDER BY ASC
 func (e *Engine) Asc(strColumns ...string) *Engine {
@@ -330,13 +314,14 @@ func (e *Engine) Desc(strColumns ...string) *Engine {
 	return e
 }
 
-//orm where condition
+// Filter orm condition
 func (e *Engine) Filter(filter bson.M) *Engine {
 	assert(filter, "filter cannot be nil")
 	e.filter = e.replaceObjectID(filter)
 	return e
 }
 
+// Set update columns specified
 func (e *Engine) Set(strColumn string, value interface{}) *Engine {
 	m, ok := e.updates[keySet]
 	if !ok {
