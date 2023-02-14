@@ -3,6 +3,7 @@ package mgoc
 import (
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
 	"time"
 )
@@ -36,8 +37,8 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	e.Debug(true)
 	//Insert(e)
-	Query(e)
-	//Update(e)
+	//Query(e)
+	Update(e)
 	//Count(e)
 	//Delete(e)
 }
@@ -59,7 +60,13 @@ func Query(e *Engine) {
 	}
 	log.Infof("Query rows %d students %+v", len(students), students)
 	for _, student := range students {
-		log.Infof("student %+v", student)
+		var oid primitive.ObjectID
+		oid, err = primitive.ObjectIDFromHex(student.Id)
+		if err != nil {
+			log.Errorf("decode object id [%s] error [%s]", student.Id, err.Error())
+			return
+		}
+		log.Infof("student %+v oid [%s]", student, oid)
 	}
 	var total int64
 	var students2 []*Student
@@ -77,7 +84,6 @@ func Query(e *Engine) {
 		log.Infof("student %+v", student)
 	}
 }
-
 
 func Count(e *Engine) {
 	rows, err := e.Model().
@@ -108,10 +114,10 @@ func Insert(e *Engine) {
 	}
 	var students = []*Student{
 		{
-			Name:    "lory",
-			Sex:     "male",
-			Age:     18,
-			ClassNo: "CLASS-1",
+			Name:        "lory",
+			Sex:         "male",
+			Age:         18,
+			ClassNo:     "CLASS-1",
 			CreatedTime: time.Now(),
 			ExtraData: ExtraData{
 				IdCard:      "2023002",
@@ -120,10 +126,10 @@ func Insert(e *Engine) {
 			},
 		},
 		{
-			Name:    "katy sky",
-			Sex:     "female",
-			Age:     28,
-			ClassNo: "CLASS-2",
+			Name:        "katy sky",
+			Sex:         "female",
+			Age:         28,
+			ClassNo:     "CLASS-2",
 			CreatedTime: time.Now(),
 			ExtraData: ExtraData{
 				IdCard:      "2023003",
@@ -160,17 +166,15 @@ func Insert(e *Engine) {
 	log.Infof("[Map] insert ids %+v", ids)
 }
 
-
 func Update(e *Engine) {
-
+	//oid, _ := primitive.ObjectIDFromHex("63e9f16b76527645cc38a815")
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
-			"name": "libin33",
-			"age":  33,
+			"_id": "63e9f16b76527645cc38a815",
 		}).
-		Set("name", "libin").
-		Set("sex", "female").
+		Set("name", "libin815").
+		Set("sex", "xx").
 		Update()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -178,7 +182,6 @@ func Update(e *Engine) {
 	}
 	log.Infof("rows %d", rows)
 }
-
 
 func Delete(e *Engine) {
 

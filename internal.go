@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 	"strings"
@@ -287,4 +288,26 @@ func (e *Engine) makeSort() bson.D {
 		})
 	}
 	return documents
+}
+
+
+//orm where condition
+func (e *Engine) replaceObjectID(filter bson.M) bson.M {
+	assert(filter, "filter cannot be nil")
+	for k, v := range filter {
+		if k == defaultPrimaryKeyName {
+			switch v.(type) {
+			case string:
+				{
+					oid, err := primitive.ObjectIDFromHex(v.(string))
+					if err != nil {
+						log.Errorf("parse object id from string %s error %s", v.(string), err)
+						return filter
+					}
+					filter[k] = oid
+				}
+			}
+		}
+	}
+	return filter
 }

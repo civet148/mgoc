@@ -192,6 +192,7 @@ func (e *Engine) Insert() ([]interface{}, error) {
 
 // Update update records
 func (e *Engine) Update() (rows int64, err error) {
+	defer e.clean()
 	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
@@ -210,6 +211,7 @@ func (e *Engine) Update() (rows int64, err error) {
 
 // Delete delete many records
 func (e *Engine) Delete() (rows int64, err error) {
+	defer e.clean()
 	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
@@ -217,7 +219,7 @@ func (e *Engine) Delete() (rows int64, err error) {
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.DeleteOptions))
 	}
-	e.debugJson("filter", e.filter)
+	e.debugJson("filter", e.filter, "options", opts)
 	res, err := col.DeleteMany(ctx, e.filter, opts...)
 	if err != nil {
 		return 0, log.Errorf(err.Error())
@@ -331,7 +333,7 @@ func (e *Engine) Desc(strColumns ...string) *Engine {
 //orm where condition
 func (e *Engine) Filter(filter bson.M) *Engine {
 	assert(filter, "filter cannot be nil")
-	e.filter = filter
+	e.filter = e.replaceObjectID(filter)
 	return e
 }
 
