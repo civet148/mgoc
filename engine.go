@@ -57,6 +57,8 @@ type Engine struct {
 	dict            map[string]interface{} // data model dictionary
 	selected        bool                   // already selected, just append it
 	selectColumns   []string               // columns to query: select
+	ascColumns      []string               // columns to order by ASC
+	descColumns     []string               // columns to order by DESC
 	dbTags          []string               // custom db tag names
 	skip            int64                  // mongodb skip
 	limit           int64                  // mongodb limit
@@ -144,14 +146,6 @@ func (e *Engine) Model(args ...interface{}) *Engine {
 func (e *Engine) Table(strName string) *Engine {
 	assert(strName, "table name is empty")
 	e.setTableName(strName)
-	return e
-}
-
-// Select orm select columns for filter
-func (e *Engine) Select(strColumns ...string) *Engine {
-	if e.setSelectColumns(strColumns...) {
-		e.selected = true
-	}
 	return e
 }
 
@@ -278,7 +272,6 @@ func (e *Engine) Count() (rows int64, err error) {
 	return rows, nil
 }
 
-
 // QueryEx orm query and return total records count
 // return rows affected and error, if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
@@ -313,6 +306,26 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 		return 0, log.Errorf(err.Error())
 	}
 	return
+}
+
+// Select orm select columns for filter
+func (e *Engine) Select(strColumns ...string) *Engine {
+	if e.setSelectColumns(strColumns...) {
+		e.selected = true
+	}
+	return e
+}
+
+// Asc orm select columns for ORDER BY ASC
+func (e *Engine) Asc(strColumns ...string) *Engine {
+	e.setAscColumns(strColumns...)
+	return e
+}
+
+// Desc orm select columns for ORDER BY DESC
+func (e *Engine) Desc(strColumns ...string) *Engine {
+	e.setDescColumns(strColumns...)
+	return e
 }
 
 //orm where condition

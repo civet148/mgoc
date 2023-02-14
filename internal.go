@@ -3,6 +3,7 @@ package mgoc
 import (
 	"fmt"
 	"github.com/civet148/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 	"strings"
@@ -151,6 +152,14 @@ func (e *Engine) setSelectColumns(strColumns ...string) (ok bool) {
 	return true
 }
 
+func (e *Engine) setAscColumns(strColumns ...string) {
+	e.ascColumns = e.appendStrings(e.ascColumns, strColumns...)
+}
+
+func (e *Engine) setDescColumns(strColumns ...string) {
+	e.descColumns = e.appendStrings(e.descColumns, strColumns...)
+}
+
 func (e *Engine) appendStrings(src []string, dest ...string) []string {
 	//check duplicated elements
 	for _, v := range dest {
@@ -227,16 +236,55 @@ func (e *Engine) makeFindOptions() []*options.FindOptions {
 		opts = append(opts, opt.(*options.FindOptions))
 	}
 	if len(opts) == 0 {
+		var opt *options.FindOptions
 		if e.limit != 0 {
-			opt := &options.FindOptions{}
+			opt = &options.FindOptions{}
 			opt.SetLimit(e.limit)
 			opt.SetSkip(e.skip)
+			opt.Projection = e.makeProjection()
 			opts = append(opts, opt)
+		}
+		if len(e.ascColumns) !=0 || len(e.descColumns) !=0 {
+			if opt == nil {
+				opt = &options.FindOptions{}
+				opts = append(opts, opt)
+			}
+			opt.Sort = e.makeSort()
 		}
 	} else {
 		opt := opts[0]
 		opt.SetLimit(e.limit)
 		opt.SetSkip(e.skip)
+		opt.Sort = e.makeSort()
+		opt.Projection = e.makeProjection()
 	}
 	return opts
+}
+
+func (e *Engine) makeProjection() bson.D {
+	var documents []bson.E
+	for _, v := range e.selectColumns {
+		documents = append(documents, bson.E{
+			Key:   v,
+			Value: 1,
+		})
+	}
+	return documents
+}
+
+func (e *Engine) makeSort() bson.D {
+	var documents []bson.E
+	for _, v := range e.ascColumns {
+		documents = append(documents, bson.E{
+			Key:   v,
+			Value: 1,
+		})
+	}
+	for _, v := range e.descColumns {
+		documents = append(documents, bson.E{
+			Key:   v,
+			Value: -1,
+		})
+	}
+	return documents
 }

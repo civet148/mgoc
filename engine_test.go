@@ -48,10 +48,10 @@ func Query(e *Engine) {
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
 			"name": "libin",
-			"age":  33,
+			//"age":  33,
 		}).
-		//Equal("name", "libin").
-		//Equal("age", 33).
+		Equal("extra_data.id_card", "2023001").
+		Desc("created_time").
 		Query()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -64,6 +64,7 @@ func Query(e *Engine) {
 	var total int64
 	var students2 []*Student
 	total, err = e.Model(&students2).
+		Select("name", "sex").
 		Table(TableNameStudentInfo).
 		Page(0, 5).
 		QueryEx()
@@ -72,9 +73,9 @@ func Query(e *Engine) {
 		return
 	}
 	log.Infof("QueryEx total %d rows %d students %+v", total, len(students2), students2)
-	//for _, student := range students {
-	//	log.Infof("student %+v", student)
-	//}
+	for _, student := range students2 {
+		log.Infof("student %+v", student)
+	}
 }
 
 
