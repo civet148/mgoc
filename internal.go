@@ -38,11 +38,12 @@ func (m ModelType) String() string {
 // clone engine
 func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 	var opts []*options.DatabaseOptions
-	if e.engineOption.DatabaseOpt != nil {
-		opts = append(opts, e.engineOption.DatabaseOpt)
+	if e.engineOpt.DatabaseOpt != nil {
+		opts = append(opts, e.engineOpt.DatabaseOpt)
 	}
 	engine := &Engine{
-		engineOption:    e.engineOption,
+		debug:           e.debug,
+		engineOpt:       e.engineOpt,
 		client:          e.client,
 		strPkName:       e.strPkName,
 		dbTags:          e.dbTags,
@@ -54,6 +55,11 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		db:              e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
+}
+func (e *Engine) debugJson(args ...interface{}) {
+	if e.debug {
+		log.Json(args...)
+	}
 }
 
 func (e *Engine) setModel(models ...interface{}) *Engine {
@@ -105,11 +111,11 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 				elemVal := reflect.New(elemTyp).Elem()
 				if typ.Kind() == reflect.Slice && val.IsNil() {
 					val.Set(reflect.MakeSlice(elemVal.Type(), 0, 0))
-					if len(e.models) == 0 && len(models) != 0 {//used to fetch records
+					if len(e.models) == 0 && len(models) != 0 { //used to fetch records
 						e.models = models
 					}
 				} else {
-					for j:= 0; j < val.Len(); j++ {//used to insert/update records
+					for j := 0; j < val.Len(); j++ { //used to insert/update records
 						e.models = append(e.models, val.Index(j).Interface()) //append elements to the models
 					}
 				}

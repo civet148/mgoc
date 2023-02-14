@@ -34,10 +34,11 @@ func TestMongoDBCases(t *testing.T) {
 		log.Errorf(err.Error())
 		return
 	}
-	_ = e
-	//Insert(e)
-	//Query(e)
+	e.Debug(true)
+	Insert(e)
+	Query(e)
 	Update(e)
+	//Delete(e)
 }
 
 func Query(e *Engine) {
@@ -140,6 +141,23 @@ func Update(e *Engine) {
 		Set("name", "libin").
 		Set("sex", "female").
 		Update()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("rows %d", rows)
+}
+
+
+func Delete(e *Engine) {
+
+	rows, err := e.Model().
+		Table(TableNameStudentInfo).
+		Filter(bson.M{
+			"name": "libin",
+			"age":  33,
+		}).
+		Delete()
 	if err != nil {
 		log.Errorf(err.Error())
 		return

@@ -44,7 +44,8 @@ type EngineOption struct {
 }
 
 type Engine struct {
-	engineOption    *EngineOption          // option for the engine
+	debug           bool                   // enable debug mode
+	engineOpt       *EngineOption          // option for the engine
 	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
 	client          *mongo.Client          // mongodb client
 	db              *mongo.Database        // database instance
@@ -80,7 +81,7 @@ func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
 	}
 	db := client.Database(ui.Database)
 	return &Engine{
-		engineOption:    opt,
+		engineOpt:       opt,
 		db:              db,
 		client:          client,
 		strDatabaseName: ui.Database,
@@ -109,6 +110,10 @@ func makeOption(opts ...*EngineOption) *EngineOption {
 
 func ContextWithTimeout(timeoutSeconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
+}
+
+func (e *Engine) Debug(on bool) {
+	e.debug = on
 }
 
 // Use clone another instance and switch to database specified
@@ -154,7 +159,7 @@ func (e *Engine) Options(options ...interface{}) *Engine {
 	return e
 }
 
-// orm query
+// Query orm query
 // return rows affected and error, if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
 func (e *Engine) Query() (err error) {
@@ -164,7 +169,7 @@ func (e *Engine) Query() (err error) {
 		return log.Errorf("no model to fetch records")
 	}
 	defer e.clean()
-	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	var opts []*options.FindOptions
@@ -172,7 +177,7 @@ func (e *Engine) Query() (err error) {
 		opts = append(opts, opt.(*options.FindOptions))
 	}
 	var cur *mongo.Cursor
-	log.Json("filter", e.filter)
+	e.debugJson("filter", e.filter)
 	cur, err = col.Find(ctx, e.filter, opts...)
 	if err != nil {
 		return log.Errorf(err.Error())
@@ -192,7 +197,7 @@ func (e *Engine) Insert() ([]interface{}, error) {
 	}
 	defer e.clean()
 	var ids []interface{}
-	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	if e.modelType == ModelType_Slice {
@@ -221,20 +226,37 @@ func (e *Engine) Insert() ([]interface{}, error) {
 
 // Update update records
 func (e *Engine) Update() (rows int64, err error) {
-	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	var opts []*options.UpdateOptions
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.UpdateOptions))
 	}
-	log.Json("filter", e.filter)
-	log.Json("updates", e.updates)
+	e.debugJson("filter", e.filter)
+	e.debugJson("updates", e.updates)
 	res, err := col.UpdateMany(ctx, e.filter, e.updates, opts...)
 	if err != nil {
 		return 0, log.Errorf(err.Error())
 	}
 	return res.ModifiedCount, nil
+}
+
+// Delete delete many records
+func (e *Engine) Delete() (rows int64, err error) {
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.DeleteOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.DeleteOptions))
+	}
+	e.debugJson("filter", e.filter)
+	res, err := col.DeleteMany(ctx, e.filter, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return res.DeletedCount, nil
 }
 
 //orm where condition
