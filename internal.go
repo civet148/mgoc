@@ -291,7 +291,7 @@ func (e *Engine) makeSort() bson.D {
 }
 
 
-//orm where condition
+//replaceObjectID replace filter _id string to ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 	assert(filter, "filter cannot be nil")
 	for k, v := range filter {
