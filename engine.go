@@ -22,6 +22,7 @@ const (
 	keyNotEqual     = "$ne"
 	keyExists       = "$exists"
 	keyRegex        = "$regex"
+	keySet          = "$set"
 )
 
 const (
@@ -57,6 +58,7 @@ type Engine struct {
 	selectColumns   []string               // columns to query: select
 	dbTags          []string               // custom db tag names
 	filter          bson.M                 // mongodb filter
+	updates         bson.M                 // mongodb updates
 }
 
 func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
@@ -86,6 +88,7 @@ func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
 		models:          make([]interface{}, 0),
 		dict:            make(map[string]interface{}),
 		filter:          make(map[string]interface{}),
+		updates:         make(map[string]interface{}),
 		dbTags:          dbTags,
 	}, nil
 }
@@ -217,20 +220,40 @@ func (e *Engine) Insert() ([]interface{}, error) {
 }
 
 // Update update records
-//func (e *Engine) Update(strName string) ([]interface{}, error) {
-//	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
-//	defer cancel()
-//	col := e.Collection(e.strTableName)
-//	res, err := col.UpdateMany(ctx, objects)
-//	if err != nil {
-//		return nil, log.Errorf(err.Error())
-//	}
-//}
+func (e *Engine) Update() (rows int64, err error) {
+	ctx, cancel := ContextWithTimeout(e.engineOption.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.UpdateOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.UpdateOptions))
+	}
+	log.Json("filter", e.filter)
+	log.Json("updates", e.updates)
+	res, err := col.UpdateMany(ctx, e.filter, e.updates, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return res.ModifiedCount, nil
+}
 
 //orm where condition
 func (e *Engine) Filter(filter bson.M) *Engine {
 	assert(filter, "filter cannot be nil")
 	e.filter = filter
+	return e
+}
+
+func (e *Engine) Set(strColumn string, value interface{}) *Engine {
+	m, ok := e.updates[keySet]
+	if !ok {
+		e.updates[keySet] = bson.M{
+			strColumn: value,
+		}
+	} else {
+		bm := m.(bson.M)
+		bm[strColumn] = value
+	}
 	return e
 }
 

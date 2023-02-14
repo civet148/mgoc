@@ -2,7 +2,9 @@ package mgoc
 
 import (
 	"github.com/civet148/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"testing"
+	"time"
 )
 
 const (
@@ -17,12 +19,13 @@ type ExtraData struct {
 }
 
 type Student struct {
-	Id        string    `bson:"_id,omitempty"`
-	Name      string    `bson:"name"`
-	Sex       string    `bson:"sex"`
-	Age       int       `bson:"age"`
-	ClassNo   string    `bson:"class_no"`
-	ExtraData ExtraData `bson:"extra_data"`
+	Id          string    `bson:"_id,omitempty"`
+	Name        string    `bson:"name"`
+	Sex         string    `bson:"sex"`
+	Age         int       `bson:"age"`
+	ClassNo     string    `bson:"class_no"`
+	CreatedTime time.Time `bson:"created_time"`
+	ExtraData   ExtraData `bson:"extra_data"`
 }
 
 func TestMongoDBCases(t *testing.T) {
@@ -32,14 +35,20 @@ func TestMongoDBCases(t *testing.T) {
 		return
 	}
 	_ = e
-	Insert(e)
-	Query(e)
+	//Insert(e)
+	//Query(e)
+	Update(e)
 }
 
 func Query(e *Engine) {
-	var students  []*Student
-	err := e.Model(&students).Table(TableNameStudentInfo).
-		Equal("name", "libin").
+	var students []*Student
+	err := e.Model(&students).
+		Table(TableNameStudentInfo).
+		Filter(bson.M{
+			"name": "libin",
+			"age":  33,
+		}).
+		//Equal("name", "libin").
 		//Equal("age", 33).
 		Query()
 	if err != nil {
@@ -54,10 +63,11 @@ func Query(e *Engine) {
 
 func Insert(e *Engine) {
 	var student = &Student{
-		Name:    "libin",
-		Sex:     "male",
-		Age:     43,
-		ClassNo: "CLASS-3",
+		Name:        "libin",
+		Sex:         "male",
+		Age:         33,
+		ClassNo:     "CLASS-3",
+		CreatedTime: time.Now(),
 		ExtraData: ExtraData{
 			IdCard:      "2023001",
 			HomeAddress: "sz 003",
@@ -70,6 +80,7 @@ func Insert(e *Engine) {
 			Sex:     "male",
 			Age:     18,
 			ClassNo: "CLASS-1",
+			CreatedTime: time.Now(),
 			ExtraData: ExtraData{
 				IdCard:      "2023002",
 				HomeAddress: "sz no 101",
@@ -81,6 +92,7 @@ func Insert(e *Engine) {
 			Sex:     "female",
 			Age:     28,
 			ClassNo: "CLASS-2",
+			CreatedTime: time.Now(),
 			ExtraData: ExtraData{
 				IdCard:      "2023003",
 				HomeAddress: "london no 102",
@@ -114,4 +126,23 @@ func Insert(e *Engine) {
 		log.Errorf(err.Error())
 	}
 	log.Infof("[Map] insert ids %+v", ids)
+}
+
+
+func Update(e *Engine) {
+
+	rows, err := e.Model().
+		Table(TableNameStudentInfo).
+		Filter(bson.M{
+			"name": "libin33",
+			"age":  33,
+		}).
+		Set("name", "libin").
+		Set("sex", "female").
+		Update()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("rows %d", rows)
 }

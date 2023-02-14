@@ -50,6 +50,7 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		models:          make([]interface{}, 0),
 		dict:            make(map[string]interface{}),
 		filter:          make(map[string]interface{}),
+		updates:         make(map[string]interface{}),
 		db:              e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
