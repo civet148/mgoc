@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-
-type EngineOption struct {
+type Option struct {
 	Debug          bool                     // enable debug mode
 	Max            int                      // max active connections
 	Idle           int                      // max idle connections
@@ -24,7 +23,7 @@ type EngineOption struct {
 
 type Engine struct {
 	debug           bool                   // enable debug mode
-	engineOpt       *EngineOption          // option for the engine
+	engineOpt       *Option                // option for the engine
 	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
 	client          *mongo.Client          // mongodb client
 	db              *mongo.Database        // database instance
@@ -43,9 +42,10 @@ type Engine struct {
 	limit           int64                  // mongodb limit
 	filter          bson.M                 // mongodb filter
 	updates         bson.M                 // mongodb updates
+	pipeline        mongo.Pipeline         // mongo pipeline
 }
 
-func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
+func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	var opt = makeOption(opts...)
 	ctx, cancel := ContextWithTimeout(opt.ConnectTimeout)
 	defer cancel()
@@ -77,12 +77,12 @@ func NewEngine(strDSN string, opts ...*EngineOption) (*Engine, error) {
 	}, nil
 }
 
-func makeOption(opts ...*EngineOption) *EngineOption {
-	var opt *EngineOption
+func makeOption(opts ...*Option) *Option {
+	var opt *Option
 	if len(opts) != 0 {
 		opt = opts[0]
 	} else {
-		opt = &EngineOption{
+		opt = &Option{
 			ConnectTimeout: defaultConnectTimeoutSeconds,
 			WriteTimeout:   defaultWriteTimeoutSeconds,
 			ReadTimeout:    defaultReadTimeoutSeconds,
@@ -93,6 +93,10 @@ func makeOption(opts ...*EngineOption) *EngineOption {
 
 func ContextWithTimeout(timeoutSeconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
+}
+
+func (e *Engine) Close() error {
+	return e.client.Disconnect(context.TODO())
 }
 
 func (e *Engine) Debug(on bool) {
@@ -297,10 +301,47 @@ func (e *Engine) Select(strColumns ...string) *Engine {
 	return e
 }
 
-//func (e *Engine) Aggregate(match, group bson.M) *Engine {
-//
-//	return e
-//}
+// Pipeline aggregate pipeline
+func (e *Engine) Pipeline(match, group, project bson.D, args ...bson.D) *Engine {
+	var pipeline = mongo.Pipeline{}
+	pipeline = append(pipeline, match)
+	pipeline = append(pipeline, group)
+	if len(project) != 0 {
+		pipeline = append(pipeline, project)
+	}
+	for _, v := range args {
+		pipeline = append(pipeline, v)
+	}
+	e.pipeline = pipeline
+	return e
+}
+
+func (e *Engine) Aggregate() (err error) {
+	assert(e.models, "query model is nil")
+	assert(e.strTableName, "table name not set")
+	assert(e.pipeline, "pipeline is nil")
+
+	defer e.clean()
+	var opts []*options.AggregateOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.AggregateOptions))
+	}
+	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	e.debugJson("pipeline", e.pipeline)
+	var cur *mongo.Cursor
+	cur, err = col.Aggregate(ctx, e.pipeline, opts...)
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	defer cur.Close(ctx)
+	err = cur.All(ctx, e.models[0])
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	return nil
+}
 
 // Asc orm select columns for ORDER BY ASC
 func (e *Engine) Asc(strColumns ...string) *Engine {

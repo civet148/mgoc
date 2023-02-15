@@ -37,10 +37,11 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	e.Debug(true)
 	//Insert(e)
-	Query(e)
+	//Query(e)
 	//Update(e)
 	//Count(e)
 	//Delete(e)
+	Aggregate(e)
 }
 
 func Query(e *Engine) {
@@ -197,4 +198,79 @@ func Delete(e *Engine) {
 		return
 	}
 	log.Infof("rows %d", rows)
+}
+
+
+type StudentAgg struct {
+	Age int `bson:"age"`
+	Total int `bson:"total"`
+}
+
+func Aggregate(e *Engine) {
+
+	/*
+	db.getCollection("student_info").aggregate([
+	   {
+	     "$match":{
+			    "name":"lory"
+		   },
+		 },
+		 {
+		   "$group":{
+		      "_id":"$name",
+					"age":{ "$avg":"$age"},
+					"total":{ "$sum":1}
+				}
+	   },
+		 {
+		   "$project":{
+		         "_id":0,
+				 "age":1,
+				 "total":1
+				}
+		 }
+	]
+	)
+	----------
+	{
+	    "age": 18,
+	    "total": 14
+	}
+	*/
+
+	var agg  []*StudentAgg
+	// create match stage
+	match := bson.D{
+		{
+			"$match",bson.D{
+				{"name", "lory"},
+			},
+		},
+	}
+	// create group stage
+	group := bson.D{
+		{"$group", bson.D{
+			{"_id", "$name"},
+			{"age", bson.D{{"$avg", "$age"}}},
+			{"total", bson.D{{"$sum", 1}}},
+		}}}
+	// create projection stage
+	project := bson.D{
+		{"$project", bson.D{
+			{"_id", 0},
+			{"age", 1},
+			{"total", 1},
+		}}}
+	err := e.Model(&agg).
+		Table(TableNameStudentInfo).
+		Pipeline(match, group, project).
+		Aggregate()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("aggregate rows %d", len(agg))
+	for _, a := range agg {
+		log.Infof("%+v", a)
+	}
 }

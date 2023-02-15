@@ -1,6 +1,5 @@
 package mgoc
 
-
 const (
 	keyIn           = "$in"
 	keyEqual        = "$eq"
@@ -14,6 +13,13 @@ const (
 	keyExists       = "$exists"
 	keyRegex        = "$regex"
 	keySet          = "$set"
+	keyMatch        = "$match"
+	keyGroup        = "$group"
+	keyHaving       = "$having"
+	keyProject      = "$project"
+	keySort         = "$sort"
+	keyLimit        = "$limit"
+	keySum          = "$sum"
 )
 
 const (
