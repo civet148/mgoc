@@ -302,15 +302,14 @@ func (e *Engine) Select(strColumns ...string) *Engine {
 }
 
 // Pipeline aggregate pipeline
-func (e *Engine) Pipeline(match, group, project bson.D, args ...bson.D) *Engine {
+func (e *Engine) Pipeline(match, group bson.D, args ...bson.D) *Engine {
 	var pipeline = mongo.Pipeline{}
 	pipeline = append(pipeline, match)
 	pipeline = append(pipeline, group)
-	if len(project) != 0 {
-		pipeline = append(pipeline, project)
-	}
 	for _, v := range args {
-		pipeline = append(pipeline, v)
+		if v != nil {
+			pipeline = append(pipeline, v)
+		}
 	}
 	e.pipeline = pipeline
 	return e
