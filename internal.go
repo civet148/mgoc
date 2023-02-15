@@ -1,7 +1,6 @@
 package mgoc
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
@@ -61,12 +60,7 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 }
 func (e *Engine) debugJson(args ...interface{}) {
 	if e.debug {
-		//log.Json(args...)
-		for _, arg := range args {
-			data, _ := json.MarshalIndent(arg, "", "\t")
-			fmt.Printf("%s\n", data)
-			fmt.Printf("-----------------------------------------------------------------------------------\n")
-		}
+		log.Json(args...)
 	}
 }
 

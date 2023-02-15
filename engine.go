@@ -183,8 +183,7 @@ func (e *Engine) Update() (rows int64, err error) {
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.UpdateOptions))
 	}
-	e.debugJson("filter", e.filter)
-	e.debugJson("updates", e.updates)
+	e.debugJson("filter", e.filter, "updates", e.updates)
 	res, err := col.UpdateMany(ctx, e.filter, e.updates, opts...)
 	if err != nil {
 		return 0, log.Errorf(err.Error())
