@@ -242,7 +242,7 @@ func (e *Engine) makeFindOptions() []*options.FindOptions {
 			opt = &options.FindOptions{}
 			opt.SetLimit(e.limit)
 			opt.SetSkip(e.skip)
-			opt.Projection = e.makeProjection()
+			opt.SetProjection(e.makeProjection())
 			opts = append(opts, opt)
 		}
 		if len(e.ascColumns) !=0 || len(e.descColumns) !=0 {
@@ -250,44 +250,35 @@ func (e *Engine) makeFindOptions() []*options.FindOptions {
 				opt = &options.FindOptions{}
 				opts = append(opts, opt)
 			}
-			opt.Sort = e.makeSort()
+			opt.SetSort(e.makeSort())
 		}
 	} else {
 		opt := opts[0]
 		opt.SetLimit(e.limit)
 		opt.SetSkip(e.skip)
-		opt.Sort = e.makeSort()
-		opt.Projection = e.makeProjection()
+		opt.SetSort(e.makeSort())
+		opt.SetProjection(e.makeProjection())
 	}
 	return opts
 }
 
-func (e *Engine) makeProjection() bson.D {
-	var documents []bson.E
+func (e *Engine) makeProjection() bson.M {
+	var projection = bson.M{}
 	for _, v := range e.selectColumns {
-		documents = append(documents, bson.E{
-			Key:   v,
-			Value: 1,
-		})
+		projection[v] = 1
 	}
-	return documents
+	return projection
 }
 
-func (e *Engine) makeSort() bson.D {
-	var documents []bson.E
+func (e *Engine) makeSort() bson.M {
+	var sort = bson.M{}
 	for _, v := range e.ascColumns {
-		documents = append(documents, bson.E{
-			Key:   v,
-			Value: 1,
-		})
+		sort[v] = 1
 	}
 	for _, v := range e.descColumns {
-		documents = append(documents, bson.E{
-			Key:   v,
-			Value: -1,
-		})
+		sort[v] = -1
 	}
-	return documents
+	return sort
 }
 
 

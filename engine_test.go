@@ -4,6 +4,7 @@ import (
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"testing"
 	"time"
 )
@@ -36,11 +37,11 @@ func TestMongoDBCases(t *testing.T) {
 		return
 	}
 	e.Debug(true)
-	//Insert(e)
-	//Query(e)
-	//Update(e)
-	//Count(e)
-	//Delete(e)
+	Insert(e)
+	Query(e)
+	Update(e)
+	Count(e)
+	Delete(e)
 	Aggregate(e)
 }
 
@@ -48,6 +49,7 @@ func Query(e *Engine) {
 	var students []*Student
 	err := e.Model(&students).
 		Table(TableNameStudentInfo).
+		Options(&options.FindOptions{}).
 		Filter(bson.M{
 			"name": "lory",
 			//"age":  18,
@@ -73,6 +75,7 @@ func Query(e *Engine) {
 	var students2 []*Student
 	total, err = e.Model(&students2).
 		Select("name", "sex").
+		Options(&options.FindOptions{}).
 		Table(TableNameStudentInfo).
 		Page(0, 5).
 		QueryEx()
@@ -88,6 +91,7 @@ func Query(e *Engine) {
 
 func Count(e *Engine) {
 	rows, err := e.Model().
+		Options(&options.CountOptions{}).
 		Table(TableNameStudentInfo).
 		Filter(bson.M{
 			"name": "lory",
@@ -139,12 +143,18 @@ func Insert(e *Engine) {
 			},
 		},
 	}
-	ids, err := e.Model(student).Table(TableNameStudentInfo).Insert()
+	ids, err := e.Model(student).
+		Table(TableNameStudentInfo).
+		Options(&options.InsertOneOptions{}).
+		Insert()
 	if err != nil {
 		log.Errorf(err.Error())
 	}
 	log.Infof("[Single] insert ids %+v", ids)
-	ids, err = e.Model(students).Table(TableNameStudentInfo).Insert()
+	ids, err = e.Model(students).
+		Options(&options.InsertManyOptions{}).
+		Table(TableNameStudentInfo).
+		Insert()
 	if err != nil {
 		log.Errorf(err.Error())
 	}
@@ -160,7 +170,10 @@ func Insert(e *Engine) {
 			Sports:      []string{"dance"},
 		},
 	}
-	ids, err = e.Model(mapStudent).Table(TableNameStudentInfo).Insert()
+	ids, err = e.Model(mapStudent).
+		Options(&options.InsertOneOptions{}).
+		Table(TableNameStudentInfo).
+		Insert()
 	if err != nil {
 		log.Errorf(err.Error())
 	}
@@ -171,6 +184,7 @@ func Update(e *Engine) {
 	//oid, _ := primitive.ObjectIDFromHex("63e9f16b76527645cc38a815")
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
+		Options(&options.UpdateOptions{}).
 		Filter(bson.M{
 			"_id": "63e9f16b76527645cc38a815",
 		}).
@@ -188,6 +202,7 @@ func Delete(e *Engine) {
 
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
+		Options(&options.DeleteOptions{}).
 		Filter(bson.M{
 			"name": "lory",
 			"age":  23,
@@ -263,6 +278,7 @@ func Aggregate(e *Engine) {
 		}}}
 	err := e.Model(&agg).
 		Table(TableNameStudentInfo).
+		Options(&options.AggregateOptions{}).
 		Pipeline(match, group, project).
 		Aggregate()
 	if err != nil {
