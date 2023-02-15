@@ -362,9 +362,9 @@ func (e *Engine) Filter(filter bson.M) *Engine {
 
 // Set update columns specified
 func (e *Engine) Set(strColumn string, value interface{}) *Engine {
-	m, ok := e.updates[keySet]
+	m, ok := e.updates[KeySet]
 	if !ok {
-		e.updates[keySet] = bson.M{
+		e.updates[KeySet] = bson.M{
 			strColumn: value,
 		}
 	} else {
@@ -376,73 +376,73 @@ func (e *Engine) Set(strColumn string, value interface{}) *Engine {
 
 func (e *Engine) In(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyIn: value,
+		KeyIn: value,
 	}
 	return e
 }
 
 func (e *Engine) And(value bson.A) *Engine {
-	e.filter[keyAnd] = value
+	e.filter[KeyAnd] = value
 	return e
 }
 
 func (e *Engine) Or(value bson.A) *Engine {
-	e.filter[keyOr] = value
+	e.filter[KeyOr] = value
 	return e
 }
 
 func (e *Engine) Equal(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyEqual: value,
+		KeyEqual: value,
 	}
 	return e
 }
 
 func (e *Engine) NotEqual(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyNotEqual: value,
+		KeyNotEqual: value,
 	}
 	return e
 }
 
 func (e *Engine) GreaterThan(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyGreaterThan: value,
+		KeyGreaterThan: value,
 	}
 	return e
 }
 
 func (e *Engine) GreaterEqual(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyGreaterEqual: value,
+		KeyGreaterEqual: value,
 	}
 	return e
 }
 
 func (e *Engine) LessThan(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyLessThan: value,
+		KeyLessThan: value,
 	}
 	return e
 }
 
 func (e *Engine) LessEqual(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyLessEqual: value,
+		KeyLessEqual: value,
 	}
 	return e
 }
 
 func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyRegex: value,
+		KeyRegex: value,
 	}
 	return e
 }
 
 func (e *Engine) Exists(strColumn string, value bool) *Engine {
 	e.filter[strColumn] = bson.M{
-		keyExists: value,
+		KeyExists: value,
 	}
 	return e
 }
