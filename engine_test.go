@@ -37,17 +37,29 @@ func TestMongoDBCases(t *testing.T) {
 		return
 	}
 	e.Debug(true)
-	Insert(e)
+	//Insert(e)
 	Query(e)
-	Update(e)
-	Count(e)
-	Delete(e)
-	Aggregate(e)
+	//Update(e)
+	//Count(e)
+	//Delete(e)
+	//Aggregate(e)
 }
 
 func Query(e *Engine) {
+	var err error
+
+	var student *Student
+	err = e.Model(&student).
+		Table(TableNameStudentInfo).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+
+	log.Infof("single student %+v", student)
 	var students []*Student
-	err := e.Model(&students).
+	err = e.Model(&students).
 		Table(TableNameStudentInfo).
 		Options(&options.FindOptions{}).
 		Filter(bson.M{

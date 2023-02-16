@@ -1,10 +1,12 @@
 package mgoc
 
 import (
+	"context"
 	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 	"strings"
@@ -307,4 +309,26 @@ func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 		}
 	}
 	return filter
+}
+
+func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
+	if e.modelType == ModelType_Struct {
+		for _, model := range e.models {
+			if !cur.Next(context.TODO()) {
+				break
+			}
+			err = cur.Decode(model)
+			if err != nil {
+				return log.Errorf(err.Error())
+			}
+		}
+	} else if e.modelType == ModelType_Slice {
+		err = cur.All(context.TODO(), e.models[0])
+		if err != nil {
+			return log.Errorf(err.Error())
+		}
+	} else {
+		err = log.Errorf("unknown model type %s", e.modelType)
+	}
+	return
 }

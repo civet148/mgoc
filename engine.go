@@ -229,11 +229,7 @@ func (e *Engine) Query() (err error) {
 		return log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	err = cur.All(ctx, e.models[0])
-	if err != nil {
-		return log.Errorf(err.Error())
-	}
-	return
+	return e.fetchRows(cur)
 }
 
 // Count orm count documents
@@ -284,11 +280,7 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 		return 0, log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	err = cur.All(ctx, e.models[0])
-	if err != nil {
-		return 0, log.Errorf(err.Error())
-	}
-	return
+	return rows, e.fetchRows(cur)
 }
 
 // Select orm select columns for projection
