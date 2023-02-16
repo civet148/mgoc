@@ -237,27 +237,35 @@ func (e *Engine) makeFindOptions() []*options.FindOptions {
 		opts = append(opts, opt.(*options.FindOptions))
 	}
 	if len(opts) == 0 {
-		var opt *options.FindOptions
+		var ok bool
+		var opt = &options.FindOptions{}
 		if e.limit != 0 {
-			opt = &options.FindOptions{}
 			opt.SetLimit(e.limit)
 			opt.SetSkip(e.skip)
 			opt.SetProjection(e.makeProjection())
-			opts = append(opts, opt)
+			ok = true
 		}
-		if len(e.ascColumns) !=0 || len(e.descColumns) !=0 {
-			if opt == nil {
-				opt = &options.FindOptions{}
-				opts = append(opts, opt)
-			}
+		if len(e.ascColumns) != 0 || len(e.descColumns) != 0 {
+			ok = true
 			opt.SetSort(e.makeSort())
+		}
+		if ok {
+			opts = append(opts, opt)
 		}
 	} else {
 		opt := opts[0]
-		opt.SetLimit(e.limit)
-		opt.SetSkip(e.skip)
-		opt.SetSort(e.makeSort())
-		opt.SetProjection(e.makeProjection())
+		if opt.Limit == nil {
+			opt.SetLimit(e.limit)
+		}
+		if opt.Skip == nil {
+			opt.SetSkip(e.skip)
+		}
+		if opt.Sort == nil {
+			opt.SetSort(e.makeSort())
+		}
+		if opt.Projection == nil {
+			opt.SetProjection(e.makeProjection())
+		}
 	}
 	return opts
 }
@@ -280,7 +288,6 @@ func (e *Engine) makeSort() bson.M {
 	}
 	return sort
 }
-
 
 //replaceObjectID replace filter _id string to ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {

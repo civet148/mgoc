@@ -215,49 +215,48 @@ func Delete(e *Engine) {
 	log.Infof("rows %d", rows)
 }
 
-
 type StudentAgg struct {
-	Age int `bson:"age"`
+	Age   int `bson:"age"`
 	Total int `bson:"total"`
 }
 
 func Aggregate(e *Engine) {
 
 	/*
-	db.getCollection("student_info").aggregate([
-	   {
-	     "$match":{
-			    "name":"lory"
+		db.getCollection("student_info").aggregate([
+		   {
+		     "$match":{
+				    "name":"lory"
+			   },
+			 },
+			 {
+			   "$group":{
+			      "_id":"$name",
+						"age":{ "$avg":"$age"},
+						"total":{ "$sum":1}
+					}
 		   },
-		 },
-		 {
-		   "$group":{
-		      "_id":"$name",
-					"age":{ "$avg":"$age"},
-					"total":{ "$sum":1}
-				}
-	   },
-		 {
-		   "$project":{
-		         "_id":0,
-				 "age":1,
-				 "total":1
-				}
-		 }
-	]
-	)
-	----------
-	{
-	    "age": 18,
-	    "total": 14
-	}
+			 {
+			   "$project":{
+			         "_id":0,
+					 "age":1,
+					 "total":1
+					}
+			 }
+		]
+		)
+		----------
+		{
+		    "age": 18,
+		    "total": 14
+		}
 	*/
 
-	var agg  []*StudentAgg
+	var agg []*StudentAgg
 	// create match stage
 	match := bson.D{
 		{
-			"$match",bson.D{
+			"$match", bson.D{
 				{"name", "lory"},
 			},
 		},
