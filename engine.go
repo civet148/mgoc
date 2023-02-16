@@ -41,7 +41,7 @@ type Engine struct {
 	limit         int64                  // mongodb limit
 	filter        bson.M                 // mongodb filter
 	updates       bson.M                 // mongodb updates
-	pipeline      mongo.Pipeline         // mongo pipeline
+	pipeline      mongo.Pipeline         // mongodb pipeline
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
