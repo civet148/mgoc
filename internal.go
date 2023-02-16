@@ -44,17 +44,16 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		opts = append(opts, e.engineOpt.DatabaseOpt)
 	}
 	engine := &Engine{
-		debug:           e.debug,
-		engineOpt:       e.engineOpt,
-		client:          e.client,
-		strPkName:       e.strPkName,
-		dbTags:          e.dbTags,
-		strDatabaseName: strDatabaseName,
-		models:          make([]interface{}, 0),
-		dict:            make(map[string]interface{}),
-		filter:          make(map[string]interface{}),
-		updates:         make(map[string]interface{}),
-		db:              e.client.Database(strDatabaseName, opts...),
+		debug:     e.debug,
+		engineOpt: e.engineOpt,
+		client:    e.client,
+		strPkName: e.strPkName,
+		dbTags:    e.dbTags,
+		models:    make([]interface{}, 0),
+		dict:      make(map[string]interface{}),
+		filter:    make(map[string]interface{}),
+		updates:   make(map[string]interface{}),
+		db:        e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
 }

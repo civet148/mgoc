@@ -22,27 +22,26 @@ type Option struct {
 }
 
 type Engine struct {
-	debug           bool                   // enable debug mode
-	engineOpt       *Option                // option for the engine
-	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
-	client          *mongo.Client          // mongodb client
-	db              *mongo.Database        // database instance
-	strDatabaseName string                 // database name
-	strPkName       string                 // primary key of table, default '_id'
-	strTableName    string                 // table name
-	modelType       ModelType              // model type
-	models          []interface{}          // data model [struct object or struct slice]
-	dict            map[string]interface{} // data model dictionary
-	selected        bool                   // already selected, just append it
-	selectColumns   []string               // columns to query: select
-	ascColumns      []string               // columns to order by ASC
-	descColumns     []string               // columns to order by DESC
-	dbTags          []string               // custom db tag names
-	skip            int64                  // mongodb skip
-	limit           int64                  // mongodb limit
-	filter          bson.M                 // mongodb filter
-	updates         bson.M                 // mongodb updates
-	pipeline        mongo.Pipeline         // mongo pipeline
+	debug         bool                   // enable debug mode
+	engineOpt     *Option                // option for the engine
+	options       []interface{}          // mongodb operation options (find/update/delete/insert...)
+	client        *mongo.Client          // mongodb client
+	db            *mongo.Database        // database instance
+	strPkName     string                 // primary key of table, default '_id'
+	strTableName  string                 // table name
+	modelType     ModelType              // model type
+	models        []interface{}          // data model [struct object or struct slice]
+	dict          map[string]interface{} // data model dictionary
+	selected      bool                   // already selected, just append it
+	selectColumns []string               // columns to query: select
+	ascColumns    []string               // columns to order by ASC
+	descColumns   []string               // columns to order by DESC
+	dbTags        []string               // custom db tag names
+	skip          int64                  // mongodb skip
+	limit         int64                  // mongodb limit
+	filter        bson.M                 // mongodb filter
+	updates       bson.M                 // mongodb updates
+	pipeline      mongo.Pipeline         // mongo pipeline
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -59,21 +58,20 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	var dbTags []string
 	dbTags = append(dbTags, TAG_NAME_BSON, TAG_NAME_DB, TAG_NAME_JSON)
 	ui := ParseUrl(strDSN)
-	if ui.Database == "" {
-		panic("no database found")
+	var db *mongo.Database
+	if ui.Database != "" {
+		db = client.Database(ui.Database)
 	}
-	db := client.Database(ui.Database)
 	return &Engine{
-		engineOpt:       opt,
-		db:              db,
-		client:          client,
-		strDatabaseName: ui.Database,
-		strPkName:       defaultPrimaryKeyName,
-		models:          make([]interface{}, 0),
-		dict:            make(map[string]interface{}),
-		filter:          make(map[string]interface{}),
-		updates:         make(map[string]interface{}),
-		dbTags:          dbTags,
+		engineOpt: opt,
+		db:        db,
+		client:    client,
+		strPkName: defaultPrimaryKeyName,
+		models:    make([]interface{}, 0),
+		dict:      make(map[string]interface{}),
+		filter:    make(map[string]interface{}),
+		updates:   make(map[string]interface{}),
+		dbTags:    dbTags,
 	}, nil
 }
 
@@ -104,8 +102,9 @@ func (e *Engine) Debug(on bool) {
 }
 
 // Use clone another instance and switch to database specified
-func (e *Engine) Use(strDatabase string) *Engine {
-	return e.clone(strDatabase)
+func (e *Engine) Use(strDatabase string, opts ...*options.DatabaseOptions) *Engine {
+	e.db = e.client.Database(strDatabase, opts...)
+	return e
 }
 
 // Database get database instance specified
@@ -122,7 +121,7 @@ func (e *Engine) Collection(strName string, opts ...*options.CollectionOptions) 
 // use to get result set, support single struct object or slice [pointer type]
 // notice: will clone a new engine object for orm operations(query/update/insert/upsert)
 func (e *Engine) Model(args ...interface{}) *Engine {
-	return e.clone(e.strDatabaseName, args...)
+	return e.clone(e.db.Name(), args...)
 }
 
 // Table set orm query table name
