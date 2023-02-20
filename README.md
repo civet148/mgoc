@@ -103,7 +103,7 @@ type Student struct {
 }
 
 func main() {
-	e, err := mgoc.NewEngine("mongodb://root:123456@192.168.20.108:27017/test?authSource=admin")
+	e, err := mgoc.NewEngine("mongodb://root:123456@127.0.0.1:27017/test?authSource=admin")
 	if err != nil {
 		log.Errorf(err.Error())
 		return

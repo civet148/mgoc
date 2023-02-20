@@ -400,15 +400,27 @@ func (d *Decimal) UnmarshalBSONValue(bt bsontype.Type, data []byte) error {
 	} else if bt == bsontype.Double {
 		bd, _, ok := bsoncore.ReadDouble(data)
 		if !ok {
-			return log.Errorf("unmarshal decimal128 error")
+			return log.Errorf("unmarshal Double error")
 		}
 		d.FromFloat(bd)
 	} else if bt == bsontype.String {
 		bd, _, ok := bsoncore.ReadString(data)
 		if !ok {
-			return log.Errorf("unmarshal decimal128 error")
+			return log.Errorf("unmarshal String error")
 		}
 		d.FromString(bd)
+	} else if bt == bsontype.Int64 {
+		bd, _, ok := bsoncore.ReadInt64(data)
+		if !ok {
+			return log.Errorf("unmarshal Int64 error")
+		}
+		d.FromInt(bd)
+	} else if bt == bsontype.Int32 {
+		bd, _, ok := bsoncore.ReadInt32(data)
+		if !ok {
+			return log.Errorf("unmarshal Int32 error")
+		}
+		d.FromInt(int64(bd))
 	} else {
 		return log.Errorf("unknown bson type [%s] to unmarshal", bt)
 	}
