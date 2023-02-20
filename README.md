@@ -73,3 +73,37 @@ $ docker exec -it mongodb mongo admin
 > use admin
 > db.createUser({user:"root", pwd: "123456", roles: ["root"]})
 ```
+
+# quick start
+
+```go
+package main
+import (
+    "github.com/civet148/log"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo/options"
+)
+func main() {
+	e, err := NewEngine("mongodb://root:123456@192.168.20.108:27017/test?authSource=admin")
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	var students []*Student
+	err = e.Model(&students).
+            Table("student_info").
+            Options(&options.FindOptions{}).
+            Filter(bson.M{
+                "name": "lory",
+            }).
+            Desc("created_time").
+            Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	for _, s := range students {
+		log.Infof("student %+v", s)
+	}
+}
+```
