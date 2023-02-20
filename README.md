@@ -79,8 +79,9 @@ $ docker exec -it mongodb mongo admin
 ```go
 package main
 import (
-	"time"
+    "time"
     "github.com/civet148/log"
+    "github.com/civet148/mgoc"
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -102,7 +103,7 @@ type Student struct {
 }
 
 func main() {
-	e, err := NewEngine("mongodb://root:123456@192.168.20.108:27017/test?authSource=admin")
+	e, err := mgoc.NewEngine("mongodb://root:123456@192.168.20.108:27017/test?authSource=admin")
 	if err != nil {
 		log.Errorf(err.Error())
 		return
