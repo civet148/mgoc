@@ -205,6 +205,9 @@ func (e *Engine) Delete() (rows int64, err error) {
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.DeleteOptions))
 	}
+	if len(e.filter) == 0 {
+		return 0, log.Errorf("filter is empty")
+	}
 	e.debugJson("filter", e.filter, "options", opts)
 	res, err := col.DeleteMany(ctx, e.filter, opts...)
 	if err != nil {
