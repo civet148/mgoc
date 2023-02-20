@@ -299,6 +299,8 @@ func (e *Engine) Id(v interface{}) *Engine {
 			}
 			e.filter[defaultPrimaryKeyName] = oid
 		}
+	default:
+		e.filter[defaultPrimaryKeyName] = v
 	}
 	return e
 }
