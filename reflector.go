@@ -23,8 +23,8 @@ const (
 
 var dbTags = []string{TAG_NAME_BSON, TAG_NAME_JSON, TAG_NAME_DB} // custom db tag names
 type ModelReflector struct {
-	value  interface{}            //value
-	engine *Engine                // database engine
+	value  interface{}            //model value
+	engine *Engine                //database engine
 	dict   map[string]interface{} //dictionary of structure tag and value
 }
 
@@ -48,51 +48,52 @@ func newReflector(e *Engine, v interface{}) *ModelReflector {
 
 // parse struct tag and value to map
 func (s *ModelReflector) ToMap(tagNames ...string) map[string]interface{} {
+	models := s.value.([]interface{})
+	for _, model := range models {
+		typ := reflect.TypeOf(model)
+		val := reflect.ValueOf(model)
+		for {
+			if typ.Kind() != reflect.Ptr { // pointer type
+				break
+			}
+			typ = typ.Elem()
+			val = val.Elem()
+		}
 
-	typ := reflect.TypeOf(s.value)
-	val := reflect.ValueOf(s.value)
-
-	for {
-		if typ.Kind() != reflect.Ptr { // pointer type
-			break
-		}
-		typ = typ.Elem()
-		val = val.Elem()
-	}
-
-	kind := typ.Kind()
-	switch kind {
-	case reflect.Struct:
-		{
-			s.parseStructField(typ, val, tagNames...)
-		}
-	case reflect.Slice:
-		{
-			typ = val.Type().Elem()
-			val = reflect.New(typ).Elem()
-			s.parseStructField(typ, val, tagNames...)
-		}
-	case reflect.Map:
-		{
-			if v, ok := s.value.(*map[string]interface{}); ok {
-				s.dict = *v
-				break
+		kind := typ.Kind()
+		switch kind {
+		case reflect.Struct:
+			{
+				s.parseStructField(typ, val, tagNames...)
 			}
-			if v, ok := s.value.(map[string]interface{}); ok {
-				s.dict = v
-				break
+		case reflect.Slice:
+			{
+				typ = val.Type().Elem()
+				val = reflect.New(typ).Elem()
+				s.parseStructField(typ, val, tagNames...)
 			}
-			if v, ok := s.value.(*map[string]string); ok {
-				s.dict = s.convertMapString(*v)
-				break
+		case reflect.Map:
+			{
+				if v, ok := s.value.(*map[string]interface{}); ok {
+					s.dict = *v
+					break
+				}
+				if v, ok := s.value.(map[string]interface{}); ok {
+					s.dict = v
+					break
+				}
+				if v, ok := s.value.(*map[string]string); ok {
+					s.dict = s.convertMapString(*v)
+					break
+				}
+				if v, ok := s.value.(map[string]string); ok {
+					s.dict = s.convertMapString(v)
+					break
+				}
 			}
-			if v, ok := s.value.(map[string]string); ok {
-				s.dict = s.convertMapString(v)
-				break
-			}
+		default:
+			log.Warnf("kind [%v] not support yet", typ.Kind())
 		}
-	default:
-		log.Warnf("kind [%v] not support yet", typ.Kind())
 	}
 	return s.dict
 }

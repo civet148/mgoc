@@ -332,3 +332,15 @@ func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
 	}
 	return
 }
+
+func (e *Engine) makeUpdates() {
+	for _, col := range e.selectColumns {
+		v := e.dict[col]
+		e.Set(col, v)
+	}
+	for k, v := range e.dict {
+		if k == defaultPrimaryKeyName && v != nil {
+			e.Id(v)
+		}
+	}
+}

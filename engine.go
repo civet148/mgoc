@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -182,7 +183,11 @@ func (e *Engine) Update() (rows int64, err error) {
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.UpdateOptions))
 	}
+	e.makeUpdates()
 	e.debugJson("filter", e.filter, "updates", e.updates)
+	if len(e.filter) == 0 {
+		return 0, log.Errorf("filter is empty")
+	}
 	res, err := col.UpdateMany(ctx, e.filter, e.updates, opts...)
 	if err != nil {
 		return 0, log.Errorf(err.Error())
@@ -281,6 +286,21 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 	}
 	defer cur.Close(ctx)
 	return rows, e.fetchRows(cur)
+}
+
+func (e *Engine) Id(v interface{}) *Engine {
+	switch v.(type) {
+	case string:
+		{
+			oid, err := primitive.ObjectIDFromHex(v.(string))
+			if err != nil {
+				log.Errorf("parse object id from string %s error %s", v.(string), err)
+				return e
+			}
+			e.filter[defaultPrimaryKeyName] = oid
+		}
+	}
+	return e
 }
 
 // Select orm select columns for projection

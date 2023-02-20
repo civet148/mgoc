@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	objectId             = "63e9f16b76527645cc38a815"
 	TableNameStudentInfo = "student_info"
 	defaultMongoUrl      = "mongodb://root:123456@192.168.20.108:27017/test?authSource=admin"
 )
@@ -37,12 +38,12 @@ func TestMongoDBCases(t *testing.T) {
 		return
 	}
 	e.Debug(true)
-	//Insert(e)
+	Insert(e)
 	Query(e)
-	//Update(e)
-	//Count(e)
-	//Delete(e)
-	//Aggregate(e)
+	Update(e)
+	Count(e)
+	Delete(e)
+	Aggregate(e)
 }
 
 func Query(e *Engine) {
@@ -193,12 +194,12 @@ func Insert(e *Engine) {
 }
 
 func Update(e *Engine) {
-	//oid, _ := primitive.ObjectIDFromHex("63e9f16b76527645cc38a815")
-	rows, err := e.Model().
+	//oid, _ := primitive.ObjectIDFromHex(objectId)
+	_, err := e.Model().
 		Table(TableNameStudentInfo).
 		Options(&options.UpdateOptions{}).
 		Filter(bson.M{
-			"_id": "63e9f16b76527645cc38a815",
+			"_id": objectId,
 		}).
 		Set("name", "golang2006").
 		Set("sex", "xx").
@@ -207,7 +208,32 @@ func Update(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
-	log.Infof("rows %d", rows)
+	var s *Student
+	err = e.Model(&s).
+		Table(TableNameStudentInfo).
+		Id(objectId).
+		Query()
+	log.Infof("query updated student [%+v]", s)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	student := &Student{
+		Id:   objectId,
+		Name: "kary",
+		Sex:  "female",
+		Age:  39,
+	}
+	//UPDATE student_info SET name='kary', sex='female', age=39 WHERE _id='63e9f16b76527645cc38a815'
+	_, err = e.Model(&student).
+		Table(TableNameStudentInfo).
+		Options(&options.UpdateOptions{}).
+		Select("name", "sex", "age").
+		Update()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
 }
 
 func Delete(e *Engine) {
