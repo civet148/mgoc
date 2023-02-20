@@ -26,6 +26,7 @@ type Student struct {
 	Name        string    `bson:"name"`
 	Sex         string    `bson:"sex"`
 	Age         int       `bson:"age"`
+	Balance     Decimal   `bson:"balance"`
 	ClassNo     string    `bson:"class_no"`
 	CreatedTime time.Time `bson:"created_time"`
 	ExtraData   ExtraData `bson:"extra_data"`
@@ -87,7 +88,7 @@ func Query(e *Engine) {
 	var total int64
 	var students2 []*Student
 	total, err = e.Model(&students2).
-		Select("name", "sex").
+		Select("name", "sex", "balance", "created_time").
 		Options(&options.FindOptions{}).
 		Table(TableNameStudentInfo).
 		Page(0, 5).
@@ -123,6 +124,7 @@ func Insert(e *Engine) {
 		Sex:         "male",
 		Age:         33,
 		ClassNo:     "CLASS-3",
+		Balance:     NewDecimal("532.324"),
 		CreatedTime: time.Now(),
 		ExtraData: ExtraData{
 			IdCard:      "2023001",
@@ -130,32 +132,32 @@ func Insert(e *Engine) {
 			Sports:      []string{"football", "badmin"},
 		},
 	}
-	var students = []*Student{
-		{
-			Name:        "lory",
-			Sex:         "male",
-			Age:         18,
-			ClassNo:     "CLASS-1",
-			CreatedTime: time.Now(),
-			ExtraData: ExtraData{
-				IdCard:      "2023002",
-				HomeAddress: "sz no 101",
-				Sports:      []string{"football", "baseball"},
-			},
-		},
-		{
-			Name:        "katy",
-			Sex:         "female",
-			Age:         28,
-			ClassNo:     "CLASS-2",
-			CreatedTime: time.Now(),
-			ExtraData: ExtraData{
-				IdCard:      "2023003",
-				HomeAddress: "london no 102",
-				Sports:      []string{"singing", "dance"},
-			},
-		},
-	}
+	//var students = []*Student{
+	//	{
+	//		Name:        "lory",
+	//		Sex:         "male",
+	//		Age:         18,
+	//		ClassNo:     "CLASS-1",
+	//		CreatedTime: time.Now(),
+	//		ExtraData: ExtraData{
+	//			IdCard:      "2023002",
+	//			HomeAddress: "sz no 101",
+	//			Sports:      []string{"football", "baseball"},
+	//		},
+	//	},
+	//	{
+	//		Name:        "katy",
+	//		Sex:         "female",
+	//		Age:         28,
+	//		ClassNo:     "CLASS-2",
+	//		CreatedTime: time.Now(),
+	//		ExtraData: ExtraData{
+	//			IdCard:      "2023003",
+	//			HomeAddress: "london no 102",
+	//			Sports:      []string{"singing", "dance"},
+	//		},
+	//	},
+	//}
 	ids, err := e.Model(student).
 		Table(TableNameStudentInfo).
 		Options(&options.InsertOneOptions{}).
@@ -164,33 +166,34 @@ func Insert(e *Engine) {
 		log.Errorf(err.Error())
 	}
 	log.Infof("[Single] insert ids %+v", ids)
-	ids, err = e.Model(students).
-		Options(&options.InsertManyOptions{}).
-		Table(TableNameStudentInfo).
-		Insert()
-	if err != nil {
-		log.Errorf(err.Error())
-	}
-	log.Infof("[Many] insert ids %+v", ids)
-	mapStudent := map[string]interface{}{
-		"name":     "juan",
-		"sex":      "male",
-		"age":      58,
-		"class_no": "CLASS-22",
-		"extra_data": ExtraData{
-			IdCard:      "2023004",
-			HomeAddress: "berlin no 108",
-			Sports:      []string{"dance"},
-		},
-	}
-	ids, err = e.Model(mapStudent).
-		Options(&options.InsertOneOptions{}).
-		Table(TableNameStudentInfo).
-		Insert()
-	if err != nil {
-		log.Errorf(err.Error())
-	}
-	log.Infof("[Map] insert ids %+v", ids)
+	//ids, err = e.Model(students).
+	//	Options(&options.InsertManyOptions{}).
+	//	Table(TableNameStudentInfo).
+	//	Insert()
+	//if err != nil {
+	//	log.Errorf(err.Error())
+	//}
+	//log.Infof("[Many] insert ids %+v", ids)
+	//mapStudent := map[string]interface{}{
+	//	"name":         "juan",
+	//	"sex":          "male",
+	//	"age":          58,
+	//	"class_no":     "CLASS-22",
+	//	"created_time": time.Now(),
+	//	"extra_data": ExtraData{
+	//		IdCard:      "2023004",
+	//		HomeAddress: "berlin no 108",
+	//		Sports:      []string{"dance"},
+	//	},
+	//}
+	//ids, err = e.Model(mapStudent).
+	//	Options(&options.InsertOneOptions{}).
+	//	Table(TableNameStudentInfo).
+	//	Insert()
+	//if err != nil {
+	//	log.Errorf(err.Error())
+	//}
+	//log.Infof("[Map] insert ids %+v", ids)
 }
 
 func Update(e *Engine) {
@@ -203,6 +206,7 @@ func Update(e *Engine) {
 		}).
 		Set("name", "golang2006").
 		Set("sex", "xx").
+		Set("balance", "52.01").
 		Update()
 	if err != nil {
 		log.Errorf(err.Error())

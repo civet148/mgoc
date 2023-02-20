@@ -4,6 +4,10 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"github.com/civet148/log"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/x/bsonx"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"math"
 	"math/big"
 
@@ -12,10 +16,10 @@ import (
 	//"gopkg.in/mgo.v2/bson"
 )
 
-const(
-	fil = "1000000000000000000"
+const (
+	fil   = "1000000000000000000"
 	ether = "1000000000000000000"
-	btc = "100000000"
+	btc   = "100000000"
 )
 
 type Decimal struct {
@@ -78,13 +82,12 @@ func (d Decimal) BigInt() (b *big.Int, ok bool) {
 	return b.SetString(d.String(), 10)
 }
 
-
 func (d Decimal) Amount2FIL() Decimal {
 	return d.Mul(NewDecimal(fil))
 }
 
 func (d Decimal) FIL2Amount() Decimal {
-	return  d.Div(NewDecimal(fil))
+	return d.Div(NewDecimal(fil))
 }
 
 func (d Decimal) Amount2Ether() Decimal {
@@ -92,7 +95,7 @@ func (d Decimal) Amount2Ether() Decimal {
 }
 
 func (d Decimal) Ether2Amount() Decimal {
-	return  d.Div(NewDecimal(ether))
+	return d.Div(NewDecimal(ether))
 }
 
 func (d Decimal) Amount2Btc() Decimal {
@@ -100,7 +103,7 @@ func (d Decimal) Amount2Btc() Decimal {
 }
 
 func (d Decimal) Btc2Amount() Decimal {
-	return  d.Div(NewDecimal(btc))
+	return d.Div(NewDecimal(btc))
 }
 
 func (d Decimal) Amount2Coin(prec int) Decimal {
@@ -114,7 +117,7 @@ func (d Decimal) Coin2Amount(prec int) Decimal {
 	if prec < 0 {
 		log.Panic("precision cannot be negative")
 	}
-	return  d.Div(NewDecimal(math.Pow10(prec)))
+	return d.Div(NewDecimal(math.Pow10(prec)))
 }
 
 func (d *Decimal) FromString(v string) {
@@ -376,17 +379,42 @@ func (d *Decimal) UnmarshalBSON(data []byte) error {
 	return d.dec.UnmarshalJSON(data)
 }
 
-//
-// MarshalBSON implements the bson.Marshaler interface.
-//func (d Decimal) MarshalBSONValue() (bsontype.Type, []byte, error) {
-//	return bsontype.String, []byte(d.dec.String()), nil
-//}
-//
-//// UnmarshalBSON implements the bson.Unmarshaler interface.
-//func (d *Decimal) UnmarshalBSONValue(_ bsontype.Type, data []byte) error {
-//	return d.dec.UnmarshalJSON(data)
-//}
-//
+//MarshalBSONValue implements the bson.Marshaler interface.
+func (d Decimal) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	pd, err := primitive.ParseDecimal128(d.dec.String())
+	if err != nil {
+		return bsontype.Decimal128, nil, log.Errorf(err.Error())
+	}
+	return bsonx.Decimal128(pd).MarshalBSONValue()
+}
+
+// UnmarshalBSONValue implements the bson.Unmarshaler interface.
+func (d *Decimal) UnmarshalBSONValue(bt bsontype.Type, data []byte) error {
+
+	if bt == bsontype.Decimal128 {
+		bd, _, ok := bsoncore.ReadDecimal128(data)
+		if !ok {
+			return log.Errorf("unmarshal decimal128 error")
+		}
+		d.FromString(bd.String())
+	} else if bt == bsontype.Double {
+		bd, _, ok := bsoncore.ReadDouble(data)
+		if !ok {
+			return log.Errorf("unmarshal decimal128 error")
+		}
+		d.FromFloat(bd)
+	} else if bt == bsontype.String {
+		bd, _, ok := bsoncore.ReadString(data)
+		if !ok {
+			return log.Errorf("unmarshal decimal128 error")
+		}
+		d.FromString(bd)
+	} else {
+		log.Errorf("unknown bson type [%s] to unmarshal", bt)
+	}
+	return nil
+}
+
 //// GetBSON implements the bson.Getter interface (mgo.v2)
 //func (d Decimal) GetBSON() (interface{}, error) {
 //	return d.dec.String(), nil
