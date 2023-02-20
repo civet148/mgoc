@@ -410,7 +410,7 @@ func (d *Decimal) UnmarshalBSONValue(bt bsontype.Type, data []byte) error {
 		}
 		d.FromString(bd)
 	} else {
-		log.Errorf("unknown bson type [%s] to unmarshal", bt)
+		return log.Errorf("unknown bson type [%s] to unmarshal", bt)
 	}
 	return nil
 }
