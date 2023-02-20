@@ -83,6 +83,23 @@ import (
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type ExtraData struct {
+	IdCard      string   `bson:"id_card"`
+	HomeAddress string   `bson:"home_address"`
+	Sports      []string `bson:"sports"`
+}
+
+type Student struct {
+	Id          string    `bson:"_id,omitempty"`
+	Name        string    `bson:"name"`
+	Sex         string    `bson:"sex"`
+	Age         int       `bson:"age"`
+	ClassNo     string    `bson:"class_no"`
+	CreatedTime time.Time `bson:"created_time"`
+	ExtraData   ExtraData `bson:"extra_data"`
+}
+
 func main() {
 	e, err := NewEngine("mongodb://root:123456@192.168.20.108:27017/test?authSource=admin")
 	if err != nil {
