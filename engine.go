@@ -217,7 +217,7 @@ func (e *Engine) Delete() (rows int64, err error) {
 }
 
 // Query orm query
-// return rows affected and error, if err is not nil must be something wrong
+// return error if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
 func (e *Engine) Query() (err error) {
 	assert(e.models, "query model is nil")
@@ -260,9 +260,9 @@ func (e *Engine) Count() (rows int64, err error) {
 }
 
 // QueryEx orm query and return total records count
-// return rows affected and error, if err is not nil must be something wrong
+// return total and error, if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
-func (e *Engine) QueryEx() (rows int64, err error) {
+func (e *Engine) QueryEx() (total int64, err error) {
 	assert(e.models, "query model is nil")
 	assert(e.strTableName, "table name not set")
 	if len(e.models) == 0 {
@@ -279,7 +279,7 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 	if err != nil {
 		return 0, log.Errorf(err.Error())
 	}
-	rows, err = col.CountDocuments(ctx, e.filter)
+	total, err = col.CountDocuments(ctx, e.filter)
 	if err != nil {
 		return 0, log.Errorf(err.Error())
 	}
@@ -288,7 +288,7 @@ func (e *Engine) QueryEx() (rows int64, err error) {
 		return 0, log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	return rows, e.fetchRows(cur)
+	return total, e.fetchRows(cur)
 }
 
 func (e *Engine) Id(v interface{}) *Engine {
@@ -330,6 +330,7 @@ func (e *Engine) Pipeline(match, group bson.D, args ...bson.D) *Engine {
 	return e
 }
 
+// Aggregate execute aggregate pipeline
 func (e *Engine) Aggregate() (err error) {
 	assert(e.models, "query model is nil")
 	assert(e.strTableName, "table name not set")
