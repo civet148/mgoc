@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	objectId             = "63e9f16b76527645cc38a815"
+	objectId             = "63f46e3e9599d819bd5aebc4"
 	TableNameStudentInfo = "student_info"
 	defaultMongoUrl      = "mongodb://root:123456@192.168.20.108:27017/test?authSource=admin"
 )
@@ -65,7 +65,7 @@ func Query(e *Engine) {
 		Table(TableNameStudentInfo).
 		Options(&options.FindOptions{}).
 		Filter(bson.M{
-			"name": "lory",
+			"name": "john",
 			//"age":  18,
 		}).
 		//Equal("extra_data.id_card", "2023001").
@@ -268,7 +268,7 @@ func Aggregate(e *Engine) {
 		db.getCollection("student_info").aggregate([
 		   {
 		     "$match":{
-				    "name":"lory"
+				    "name":"john"
 			   },
 			 },
 			 {
@@ -299,7 +299,7 @@ func Aggregate(e *Engine) {
 	match := bson.D{
 		{
 			"$match", bson.D{
-				{"name", "lory"},
+				{"name", "john"},
 			},
 		},
 	}

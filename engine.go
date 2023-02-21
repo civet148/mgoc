@@ -57,7 +57,7 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		return nil, log.Errorf("ping %s error [%s]", strDSN, err)
 	}
 	var dbTags []string
-	dbTags = append(dbTags, TAG_NAME_BSON, TAG_NAME_DB, TAG_NAME_JSON)
+	dbTags = append(dbTags, TAG_NAME_BSON)
 	ui := ParseUrl(strDSN)
 	var db *mongo.Database
 	if ui.Database != "" {

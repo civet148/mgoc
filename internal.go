@@ -129,14 +129,8 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 			}
 		}
 
-		var selectColumns []string
+		//var selectColumns []string
 		e.dict = newReflector(e, e.models).ToMap(e.dbTags...)
-		for k := range e.dict {
-			selectColumns = append(selectColumns, k)
-		}
-		if len(selectColumns) > 0 {
-			e.setSelectColumns(selectColumns...)
-		}
 		break //only check first argument
 	}
 	return e
@@ -238,21 +232,16 @@ func (e *Engine) makeFindOptions() []*options.FindOptions {
 		opts = append(opts, opt.(*options.FindOptions))
 	}
 	if len(opts) == 0 {
-		var ok bool
 		var opt = &options.FindOptions{}
 		if e.limit != 0 {
 			opt.SetLimit(e.limit)
 			opt.SetSkip(e.skip)
-			opt.SetProjection(e.makeProjection())
-			ok = true
 		}
+		opt.SetProjection(e.makeProjection())
 		if len(e.ascColumns) != 0 || len(e.descColumns) != 0 {
-			ok = true
 			opt.SetSort(e.makeSort())
 		}
-		if ok {
-			opts = append(opts, opt)
-		}
+		opts = append(opts, opt)
 	} else {
 		opt := opts[0]
 		if opt.Limit == nil {

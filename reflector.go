@@ -12,8 +12,6 @@ import (
 )
 
 const (
-	TAG_NAME_DB   = "db"
-	TAG_NAME_JSON = "json"
 	TAG_NAME_BSON = "bson"
 )
 
@@ -21,7 +19,7 @@ const (
 	TAG_VALUE_IGNORE = "-" //ignore
 )
 
-var dbTags = []string{TAG_NAME_BSON, TAG_NAME_JSON, TAG_NAME_DB} // custom db tag names
+var dbTags = []string{TAG_NAME_BSON} // custom db tag names
 type ModelReflector struct {
 	value  interface{}            //model value
 	engine *Engine                //database engine
@@ -132,7 +130,7 @@ func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, t
 			if !valField.IsValid() || !valField.CanInterface() {
 				continue
 			}
-			tagVal, ignore := s.getTag(typField, TAG_NAME_DB)
+			tagVal, ignore := s.getTag(typField, TAG_NAME_BSON)
 			if ignore {
 				continue
 			}
@@ -335,7 +333,7 @@ func handleTagValue(strTagName, strTagValue string) string {
 		return ""
 	}
 
-	if strTagName == TAG_NAME_JSON || strTagName == TAG_NAME_BSON {
+	if strTagName == TAG_NAME_BSON {
 		vs := strings.Split(strTagValue, ",")
 		strTagValue = vs[0]
 	}
