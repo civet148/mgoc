@@ -291,6 +291,11 @@ func (e *Engine) QueryEx() (total int64, err error) {
 	return total, e.fetchRows(cur)
 }
 
+func (e *Engine) Limit(n int) *Engine {
+	e.limit = int64(n)
+	return e
+}
+
 func (e *Engine) Id(v interface{}) *Engine {
 	switch v.(type) {
 	case string:

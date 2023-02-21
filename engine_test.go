@@ -70,6 +70,7 @@ func Query(e *Engine) {
 		}).
 		//Equal("extra_data.id_card", "2023001").
 		Desc("created_time").
+		Limit(2).
 		Query()
 	if err != nil {
 		log.Errorf(err.Error())
