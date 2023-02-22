@@ -224,16 +224,17 @@ func Update(e *Engine) {
 		return
 	}
 	student := &Student{
-		Id:   objectId,
-		Name: "kary",
-		Sex:  "female",
-		Age:  39,
+		Id:          objectId,
+		Name:        "kary",
+		Sex:         "female",
+		Age:         39,
+		CreatedTime: time.Now(),
 	}
-	//UPDATE student_info SET name='kary', sex='female', age=39 WHERE _id='63e9f16b76527645cc38a815'
+	//UPDATE student_info SET name='kary', sex='female', age=39, created_time=NOW() WHERE _id='63e9f16b76527645cc38a815'
 	_, err = e.Model(&student).
 		Table(TableNameStudentInfo).
 		Options(&options.UpdateOptions{}).
-		Select("name", "sex", "age").
+		Select("name", "sex", "age", "created_time").
 		Update()
 	if err != nil {
 		log.Errorf(err.Error())
