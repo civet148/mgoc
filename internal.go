@@ -325,8 +325,6 @@ func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
 }
 
 func (e *Engine) makeUpdates() {
-	log.Json("selected columns", e.selectColumns)
-	log.Json("excepted columns", e.exceptColumns)
 	//select columns to update
 	e.makeSelectUpdates()
 	//make primary column for filter
