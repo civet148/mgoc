@@ -46,16 +46,17 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		opts = append(opts, e.engineOpt.DatabaseOpt)
 	}
 	engine := &Engine{
-		debug:     e.debug,
-		engineOpt: e.engineOpt,
-		client:    e.client,
-		strPkName: e.strPkName,
-		dbTags:    e.dbTags,
-		models:    make([]interface{}, 0),
-		dict:      make(map[string]interface{}),
-		filter:    make(map[string]interface{}),
-		updates:   make(map[string]interface{}),
-		db:        e.client.Database(strDatabaseName, opts...),
+		debug:         e.debug,
+		engineOpt:     e.engineOpt,
+		client:        e.client,
+		strPkName:     e.strPkName,
+		dbTags:        e.dbTags,
+		models:        make([]interface{}, 0),
+		exceptColumns: make(map[string]bool),
+		dict:          make(map[string]interface{}),
+		filter:        make(map[string]interface{}),
+		updates:       make(map[string]interface{}),
+		db:            e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
 }
@@ -136,16 +137,17 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) setSelectColumns(strColumns ...string) (ok bool) {
+func (e *Engine) setSelectColumns(strColumns ...string) {
 	if len(strColumns) == 0 {
-		return false
+		return
 	}
-	if e.selected {
-		e.selectColumns = e.appendStrings(e.selectColumns, strColumns...)
-	} else {
-		e.selectColumns = strColumns
+	e.selectColumns = e.appendStrings(e.selectColumns, strColumns...)
+}
+
+func (e *Engine) setExceptColumns(strColumns ...string) {
+	for _, col := range strColumns {
+		e.exceptColumns[col] = true
 	}
-	return true
 }
 
 func (e *Engine) setAscColumns(strColumns ...string) {
@@ -188,11 +190,11 @@ func (e *Engine) setTableName(strNames ...string) {
 }
 
 func (e *Engine) clean() {
-	e.filter = make(map[string]interface{})
 	e.options = nil
 	e.models = nil
 	e.modelType = 0
-	e.selected = false
+	e.exceptColumns = make(map[string]bool)
+	e.filter = make(map[string]interface{})
 }
 
 //assert bool and string/struct/slice/map nil, call panic
@@ -323,13 +325,44 @@ func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
 }
 
 func (e *Engine) makeUpdates() {
-	for _, col := range e.selectColumns {
-		v := e.dict[col]
-		e.Set(col, v)
-	}
+	log.Json("selected columns", e.selectColumns)
+	log.Json("excepted columns", e.exceptColumns)
+	//select columns to update
+	e.makeSelectUpdates()
+	//make primary column for filter
+	e.makePrimaryKeyUpdates()
+}
+
+//makePrimaryKeyUpdates make primary column for filter
+func (e *Engine) makePrimaryKeyUpdates() {
 	for k, v := range e.dict {
-		if k == defaultPrimaryKeyName && v != nil {
+		if k == e.PrimaryKey() && v != nil {
 			e.Id(v)
 		}
 	}
+}
+
+//makeSelectUpdates make selected columns to update
+func (e *Engine) makeSelectUpdates() {
+	if len(e.selectColumns) == 0 {
+		for k, v := range e.dict {
+			if e.isExcepted(k) {
+				continue
+			}
+			e.Set(k, v)
+		}
+	} else {
+		for _, col := range e.selectColumns {
+			if e.isExcepted(col) {
+				continue
+			}
+			e.Set(col, e.dict[col])
+		}
+	}
+}
+
+//makeExceptUpdates make except columns to update
+func (e *Engine) isExcepted(col string) (ok bool) {
+	_, ok = e.exceptColumns[col]
+	return ok
 }

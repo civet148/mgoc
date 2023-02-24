@@ -33,8 +33,8 @@ type Engine struct {
 	modelType     ModelType              // model type
 	models        []interface{}          // data model [struct object or struct slice]
 	dict          map[string]interface{} // data model dictionary
-	selected      bool                   // already selected, just append it
-	selectColumns []string               // columns to query: select
+	selectColumns []string               // select columns to query/update
+	exceptColumns map[string]bool        // except columns to query/update
 	ascColumns    []string               // columns to order by ASC
 	descColumns   []string               // columns to order by DESC
 	dbTags        []string               // custom db tag names
@@ -64,15 +64,16 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		db = client.Database(ui.Database)
 	}
 	return &Engine{
-		engineOpt: opt,
-		db:        db,
-		client:    client,
-		strPkName: defaultPrimaryKeyName,
-		models:    make([]interface{}, 0),
-		dict:      make(map[string]interface{}),
-		filter:    make(map[string]interface{}),
-		updates:   make(map[string]interface{}),
-		dbTags:    dbTags,
+		engineOpt:     opt,
+		db:            db,
+		client:        client,
+		strPkName:     defaultPrimaryKeyName,
+		models:        make([]interface{}, 0),
+		exceptColumns: make(map[string]bool),
+		dict:          make(map[string]interface{}),
+		filter:        make(map[string]interface{}),
+		updates:       make(map[string]interface{}),
+		dbTags:        dbTags,
 	}, nil
 }
 
@@ -116,6 +117,10 @@ func (e *Engine) Database() *mongo.Database {
 // Collection get collection instance specified
 func (e *Engine) Collection(strName string, opts ...*options.CollectionOptions) *mongo.Collection {
 	return e.db.Collection(strName, opts...)
+}
+
+func (e *Engine) PrimaryKey() string {
+	return defaultPrimaryKeyName
 }
 
 // Model orm model
@@ -315,9 +320,13 @@ func (e *Engine) Id(v interface{}) *Engine {
 
 // Select orm select columns for projection
 func (e *Engine) Select(strColumns ...string) *Engine {
-	if e.setSelectColumns(strColumns...) {
-		e.selected = true
-	}
+	e.setSelectColumns(strColumns...)
+	return e
+}
+
+// Except except columns
+func (e *Engine) Except(strColumns ...string) *Engine {
+	e.setExceptColumns(strColumns...)
 	return e
 }
 
@@ -384,6 +393,9 @@ func (e *Engine) Filter(filter bson.M) *Engine {
 
 // Set update columns specified
 func (e *Engine) Set(strColumn string, value interface{}) *Engine {
+	if strColumn == e.PrimaryKey() {
+		return e
+	}
 	m, ok := e.updates[KeySet]
 	if !ok {
 		e.updates[KeySet] = bson.M{

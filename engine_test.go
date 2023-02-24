@@ -16,20 +16,20 @@ const (
 )
 
 type ExtraData struct {
-	IdCard      string   `bson:"id_card"`
-	HomeAddress string   `bson:"home_address"`
-	Sports      []string `bson:"sports"`
+	IdCard      string   `json:"id_card" bson:"id_card"`
+	HomeAddress string   `json:"home_address" bson:"home_address"`
+	Sports      []string `json:"sports" bson:"sports"`
 }
 
 type Student struct {
-	Id          string    `bson:"_id,omitempty"`
-	Name        string    `bson:"name"`
-	Sex         string    `bson:"sex"`
-	Age         int       `bson:"age"`
-	Balance     Decimal   `bson:"balance"`
-	ClassNo     string    `bson:"class_no"`
-	CreatedTime time.Time `bson:"created_time"`
-	ExtraData   ExtraData `bson:"extra_data"`
+	Id          string    `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name        string    `json:"name" bson:"name"`
+	Sex         string    `json:"sex" bson:"sex"`
+	Age         int       `json:"age" bson:"age"`
+	Balance     Decimal   `json:"balance" bson:"balance"`
+	ClassNo     string    `json:"class_no" bson:"class_no"`
+	CreatedTime time.Time `json:"created_time" bson:"created_time"`
+	ExtraData   ExtraData `json:"extra_data" bson:"extra_data"`
 }
 
 func TestMongoDBCases(t *testing.T) {
@@ -198,7 +198,7 @@ func Insert(e *Engine) {
 }
 
 func Update(e *Engine) {
-	//oid, _ := primitive.ObjectIDFromHex(objectId)
+
 	_, err := e.Model().
 		Table(TableNameStudentInfo).
 		Options(&options.UpdateOptions{}).
@@ -223,7 +223,7 @@ func Update(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
-	student := &Student{
+	var student = &Student{
 		Id:          objectId,
 		Name:        "kary",
 		Sex:         "female",
