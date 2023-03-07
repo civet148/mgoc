@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	objectId             = "63f46e3e9599d819bd5aebc4"
+	objectId             = "640701c81e6da3783b090291"
 	TableNameStudentInfo = "student_info"
-	defaultMongoUrl      = "mongodb://root:123456@192.168.20.108:27017/test?authSource=admin"
+	defaultMongoUrl      = "mongodb://root:123456@192.168.2.9:27017/test?authSource=admin"
 )
 
 type ExtraData struct {
@@ -207,7 +207,7 @@ func Update(e *Engine) {
 		}).
 		Set("name", "golang2006").
 		Set("sex", "xx").
-		Set("balance", "52.01").
+		Set("balance", NewDecimal("52.01")).
 		Update()
 	if err != nil {
 		log.Errorf(err.Error())
