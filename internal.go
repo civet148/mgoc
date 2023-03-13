@@ -56,6 +56,8 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		dict:          make(map[string]interface{}),
 		filter:        make(map[string]interface{}),
 		updates:       make(map[string]interface{}),
+		andConditions: make(map[string]interface{}),
+		orConditions:  make(map[string]interface{}),
 		db:            e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
@@ -281,6 +283,23 @@ func (e *Engine) makeSort() bson.M {
 	return sort
 }
 
+func (e *Engine) makeFilters() {
+	e.locker.Lock()
+	defer e.locker.Unlock()
+	if e.filter == nil {
+		e.filter = make(map[string]interface{})
+	}
+	and := e.makeAndCondition()
+	if len(and) != 0 {
+		e.filter[KeyAnd] = and
+	}
+	or := e.makeAndCondition()
+	if len(and) != 0 {
+		e.filter[KeyOr] = or
+	}
+	e.filter = e.replaceObjectID(e.filter)
+}
+
 //replaceObjectID replace filter _id string to ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 	assert(filter, "filter cannot be nil")
@@ -363,4 +382,34 @@ func (e *Engine) makeSelectUpdates() {
 func (e *Engine) isExcepted(col string) (ok bool) {
 	_, ok = e.exceptColumns[col]
 	return ok
+}
+
+func (e *Engine) setAndCondition(strColumn string, value interface{}) {
+	e.locker.Lock()
+	defer e.locker.Unlock()
+	e.andConditions[strColumn] = value
+}
+
+func (e *Engine) makeAndCondition() (cond bson.A) {
+	e.locker.RLock()
+	defer e.locker.RUnlock()
+	for k, v := range e.andConditions {
+		cond = append(cond, bson.M{k: v})
+	}
+	return
+}
+
+func (e *Engine) setOrCondition(strColumn string, value interface{}) {
+	e.locker.Lock()
+	defer e.locker.Unlock()
+	e.orConditions[strColumn] = value
+}
+
+func (e *Engine) makeOrCondition() (cond bson.A) {
+	e.locker.RLock()
+	defer e.locker.RUnlock()
+	for k, v := range e.andConditions {
+		cond = append(cond, bson.M{k: v})
+	}
+	return
 }

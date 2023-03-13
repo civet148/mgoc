@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"sync"
 	"time"
 )
 
@@ -35,6 +36,8 @@ type Engine struct {
 	dict          map[string]interface{} // data model dictionary
 	selectColumns []string               // select columns to query/update
 	exceptColumns map[string]bool        // except columns to query/update
+	andConditions map[string]interface{} // AND conditions to query
+	orConditions  map[string]interface{} // OR conditions to query
 	ascColumns    []string               // columns to order by ASC
 	descColumns   []string               // columns to order by DESC
 	dbTags        []string               // custom db tag names
@@ -43,6 +46,7 @@ type Engine struct {
 	filter        bson.M                 // mongodb filter
 	updates       bson.M                 // mongodb updates
 	pipeline      mongo.Pipeline         // mongodb pipeline
+	locker        sync.RWMutex           // internal locker
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -63,7 +67,12 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	if ui.Database != "" {
 		db = client.Database(ui.Database)
 	}
+	var debug bool
+	if opt != nil && opt.Debug {
+		debug = true
+	}
 	return &Engine{
+		debug:         debug,
 		engineOpt:     opt,
 		db:            db,
 		client:        client,
@@ -73,6 +82,8 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		dict:          make(map[string]interface{}),
 		filter:        make(map[string]interface{}),
 		updates:       make(map[string]interface{}),
+		andConditions: make(map[string]interface{}),
+		orConditions:  make(map[string]interface{}),
 		dbTags:        dbTags,
 	}, nil
 }
@@ -235,6 +246,7 @@ func (e *Engine) Query() (err error) {
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	var cur *mongo.Cursor
+	e.makeFilters()
 	opts := e.makeFindOptions()
 	e.debugJson("filter", e.filter, "options", opts)
 	cur, err = col.Find(ctx, e.filter, opts...)
@@ -277,7 +289,7 @@ func (e *Engine) QueryEx() (total int64, err error) {
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
-
+	e.makeFilters()
 	opts := e.makeFindOptions()
 	var cur *mongo.Cursor
 	e.debugJson("filter", e.filter, "options", opts)
@@ -415,13 +427,13 @@ func (e *Engine) In(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) And(value bson.A) *Engine {
-	e.filter[KeyAnd] = value
+func (e *Engine) And(strColumn string, value interface{}) *Engine {
+	e.setAndCondition(strColumn, value)
 	return e
 }
 
-func (e *Engine) Or(value bson.A) *Engine {
-	e.filter[KeyOr] = value
+func (e *Engine) Or(strColumn string, value interface{}) *Engine {
+	e.setOrCondition(strColumn, value)
 	return e
 }
 
