@@ -3,6 +3,7 @@ package mgoc
 import (
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"testing"
 	"time"
@@ -37,70 +38,70 @@ func TestMongoDBCases(t *testing.T) {
 		log.Errorf(err.Error())
 		return
 	}
-	e.Debug(true)
-	//Insert(e)
+	//e.Debug(true)
+	Insert(e)
 	Query(e)
-	//Update(e)
-	//Count(e)
-	//Delete(e)
-	//Aggregate(e)
+	Update(e)
+	Count(e)
+	Delete(e)
+	Aggregate(e)
 }
 
 func Query(e *Engine) {
 	var err error
 
-	//var student *Student
-	//err = e.Model(&student).
-	//	Table(TableNameStudentInfo).
-	//	Query()
-	//if err != nil {
-	//	log.Errorf(err.Error())
-	//	return
-	//}
-	//
-	//log.Infof("single student %+v", student)
-	//var students []*Student
-	//err = e.Model(&students).
-	//	Table(TableNameStudentInfo).
-	//	Options(&options.FindOptions{}).
-	//	Filter(bson.M{
-	//		"name": "john",
-	//		//"age":  18,
-	//	}).
-	//	//Equal("extra_data.id_card", "2023001").
-	//	Desc("created_time").
-	//	Limit(2).
-	//	Query()
-	//if err != nil {
-	//	log.Errorf(err.Error())
-	//	return
-	//}
-	//log.Infof("Query rows %d students %+v", len(students), students)
-	//for _, student := range students {
-	//	var oid primitive.ObjectID
-	//	oid, err = primitive.ObjectIDFromHex(student.Id)
-	//	if err != nil {
-	//		log.Errorf("decode object id [%s] error [%s]", student.Id, err.Error())
-	//		return
-	//	}
-	//	log.Infof("student %+v oid [%s] create time [%s]", student, oid, student.CreatedTime.Local())
-	//}
-	//var total int64
-	//var students2 []*Student
-	//total, err = e.Model(&students2).
-	//	Select("name", "sex", "balance", "created_time").
-	//	Options(&options.FindOptions{}).
-	//	Table(TableNameStudentInfo).
-	//	Page(0, 5).
-	//	QueryEx()
-	//if err != nil {
-	//	log.Errorf(err.Error())
-	//	return
-	//}
-	//log.Infof("QueryEx total %d rows %d students %+v", total, len(students2), students2)
-	//for _, student := range students2 {
-	//	log.Infof("student %+v", student)
-	//}
+	var student *Student
+	err = e.Model(&student).
+		Table(TableNameStudentInfo).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+
+	log.Infof("single student %+v", student)
+	var students []*Student
+	err = e.Model(&students).
+		Table(TableNameStudentInfo).
+		Options(&options.FindOptions{}).
+		Filter(bson.M{
+			"name": "john",
+			//"age":  18,
+		}).
+		//Equal("extra_data.id_card", "2023001").
+		Desc("created_time").
+		Limit(2).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("Query rows %d students %+v", len(students), students)
+	for _, student := range students {
+		var oid primitive.ObjectID
+		oid, err = primitive.ObjectIDFromHex(student.Id)
+		if err != nil {
+			log.Errorf("decode object id [%s] error [%s]", student.Id, err.Error())
+			return
+		}
+		log.Infof("student %+v oid [%s] create time [%s]", student, oid, student.CreatedTime.Local())
+	}
+	var total int64
+	var students2 []*Student
+	total, err = e.Model(&students2).
+		Select("name", "sex", "balance", "created_time").
+		Options(&options.FindOptions{}).
+		Table(TableNameStudentInfo).
+		Page(0, 5).
+		QueryEx()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("QueryEx total %d rows %d students %+v", total, len(students2), students2)
+	for _, student := range students2 {
+		log.Infof("student %+v", student)
+	}
 
 	var students3 []*Student
 	err = e.Model(&students3).

@@ -69,9 +69,7 @@ func (e *Engine) debugJson(args ...interface{}) {
 }
 
 func (e *Engine) setModel(models ...interface{}) *Engine {
-
 	for _, v := range models {
-
 		if v == nil {
 			continue
 		}
@@ -284,17 +282,15 @@ func (e *Engine) makeSort() bson.M {
 }
 
 func (e *Engine) makeFilters() {
-	e.locker.Lock()
-	defer e.locker.Unlock()
 	if e.filter == nil {
-		e.filter = make(map[string]interface{})
+		e.makeFilterMap()
 	}
 	and := e.makeAndCondition()
 	if len(and) != 0 {
 		e.filter[KeyAnd] = and
 	}
-	or := e.makeAndCondition()
-	if len(and) != 0 {
+	or := e.makeOrCondition()
+	if len(or) != 0 {
 		e.filter[KeyOr] = or
 	}
 	e.filter = e.replaceObjectID(e.filter)
@@ -388,6 +384,14 @@ func (e *Engine) setAndCondition(strColumn string, value interface{}) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 	e.andConditions[strColumn] = value
+}
+
+func (e *Engine) makeFilterMap() {
+	e.locker.Lock()
+	defer e.locker.Unlock()
+	if e.filter == nil {
+		e.filter = make(map[string]interface{})
+	}
 }
 
 func (e *Engine) makeAndCondition() (cond bson.A) {

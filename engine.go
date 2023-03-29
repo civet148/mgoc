@@ -236,6 +236,7 @@ func (e *Engine) Delete() (rows int64, err error) {
 // return error if err is not nil must be something wrong
 // NOTE: Model function is must be called before call this function
 func (e *Engine) Query() (err error) {
+
 	assert(e.models, "query model is nil")
 	assert(e.strTableName, "table name not set")
 	if len(e.models) == 0 {
@@ -247,6 +248,7 @@ func (e *Engine) Query() (err error) {
 	col := e.Collection(e.strTableName)
 	var cur *mongo.Cursor
 	e.makeFilters()
+
 	opts := e.makeFindOptions()
 	e.debugJson("filter", e.filter, "options", opts)
 	cur, err = col.Find(ctx, e.filter, opts...)
