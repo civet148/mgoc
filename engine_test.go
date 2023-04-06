@@ -294,7 +294,7 @@ func Aggregate(e *Engine) {
 			 },
 			 {
 			   "$group":{
-			      "_id":"$name",
+			      		"_id":"$name",
 						"age":{ "$avg":"$age"},
 						"total":{ "$sum":1}
 					}
@@ -320,8 +320,8 @@ func Aggregate(e *Engine) {
 	match := bson.D{
 		{
 			"$match", bson.D{
-				{"name", "john"},
-			},
+			{"name", "john"},
+		},
 		},
 	}
 	// create group stage

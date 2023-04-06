@@ -64,12 +64,16 @@ func NewDecimal(v interface{}) (d Decimal) {
 		if amt == "" {
 			amt = "0"
 		}
-		d.dec, err = decimal.NewFromString(v.(string))
+		d.dec, err = decimal.NewFromString(amt)
 		if err != nil {
 			log.Errorf("value [%v] is not a valid number", v)
 		}
 	default:
-		d.dec, err = decimal.NewFromString(fmt.Sprintf("%v", v))
+		amt := fmt.Sprintf("%v", v)
+		if amt == "" {
+			amt = "0"
+		}
+		d.dec, err = decimal.NewFromString(amt)
 		if err != nil {
 			log.Errorf("value [%v] is not a valid number", v)
 		}
