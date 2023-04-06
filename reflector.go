@@ -93,7 +93,7 @@ func (s *ModelReflector) ToMap() map[string]interface{} {
 			log.Warnf("kind [%v] not support yet", typ.Kind())
 		}
 	}
-	log.Json("dictionary", s.dict)
+	//log.Json("dictionary", s.dict)
 	return s.dict
 }
 
