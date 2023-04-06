@@ -1,7 +1,6 @@
 package mgoc
 
 import (
-	"github.com/civet148/log"
 	"net/url"
 	"strings"
 )
@@ -127,8 +126,5 @@ func ParseUrl(strUrl string) (ui *UrlInfo) {
 
 func getDatabaseName(strPath string) string {
 	idx := strings.LastIndex(strPath, "/")
-	if idx == -1 {
-		log.Errorf("[%v] invalid database path", strPath)
-	}
 	return strPath[idx+1:]
 }

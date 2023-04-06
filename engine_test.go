@@ -38,7 +38,8 @@ func TestMongoDBCases(t *testing.T) {
 		log.Errorf(err.Error())
 		return
 	}
-	//e.Debug(true)
+	//e.Use("test") //switch to other database
+	e.Debug(true)
 	Insert(e)
 	Query(e)
 	Update(e)
@@ -320,8 +321,8 @@ func Aggregate(e *Engine) {
 	match := bson.D{
 		{
 			"$match", bson.D{
-			{"name", "john"},
-		},
+				{"name", "john"},
+			},
 		},
 	}
 	// create group stage
