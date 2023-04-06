@@ -50,7 +50,6 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		engineOpt:     e.engineOpt,
 		client:        e.client,
 		strPkName:     e.strPkName,
-		dbTags:        e.dbTags,
 		models:        make([]interface{}, 0),
 		exceptColumns: make(map[string]bool),
 		dict:          make(map[string]interface{}),
@@ -131,7 +130,7 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 		}
 
 		//var selectColumns []string
-		e.dict = newReflector(e, e.models).ToMap(e.dbTags...)
+		e.dict = newReflector(e, e.models).ToMap()
 		break //only check first argument
 	}
 	return e
@@ -412,7 +411,7 @@ func (e *Engine) setOrCondition(strColumn string, value interface{}) {
 func (e *Engine) makeOrCondition() (cond bson.A) {
 	e.locker.RLock()
 	defer e.locker.RUnlock()
-	for k, v := range e.andConditions {
+	for k, v := range e.orConditions {
 		cond = append(cond, bson.M{k: v})
 	}
 	return

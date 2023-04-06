@@ -40,7 +40,6 @@ type Engine struct {
 	orConditions  map[string]interface{} // OR conditions to query
 	ascColumns    []string               // columns to order by ASC
 	descColumns   []string               // columns to order by DESC
-	dbTags        []string               // custom db tag names
 	skip          int64                  // mongodb skip
 	limit         int64                  // mongodb limit
 	filter        bson.M                 // mongodb filter
@@ -60,8 +59,6 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	if err = client.Ping(ctx, readpref.Primary()); err != nil {
 		return nil, log.Errorf("ping %s error [%s]", strDSN, err)
 	}
-	var dbTags []string
-	dbTags = append(dbTags, TAG_NAME_BSON)
 	ui := ParseUrl(strDSN)
 	var db *mongo.Database
 	if ui.Database != "" {
@@ -84,7 +81,6 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		updates:       make(map[string]interface{}),
 		andConditions: make(map[string]interface{}),
 		orConditions:  make(map[string]interface{}),
-		dbTags:        dbTags,
 	}, nil
 }
 

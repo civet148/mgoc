@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"github.com/civet148/log"
 	"reflect"
 	"strconv"
@@ -15,10 +16,10 @@ const (
 )
 
 const (
+	TAG_VALUE_NULL   = ""
 	TAG_VALUE_IGNORE = "-" //ignore
 )
 
-var dbTags = []string{TAG_NAME_BSON} // custom db tag names
 type ModelReflector struct {
 	value  interface{}            //model value
 	engine *Engine                //database engine
@@ -44,7 +45,7 @@ func newReflector(e *Engine, v interface{}) *ModelReflector {
 }
 
 // parse struct tag and value to map
-func (s *ModelReflector) ToMap(tagNames ...string) map[string]interface{} {
+func (s *ModelReflector) ToMap() map[string]interface{} {
 	models := s.value.([]interface{})
 	for _, model := range models {
 		typ := reflect.TypeOf(model)
@@ -61,13 +62,13 @@ func (s *ModelReflector) ToMap(tagNames ...string) map[string]interface{} {
 		switch kind {
 		case reflect.Struct:
 			{
-				s.parseStructField(typ, val, tagNames...)
+				s.parseStructField(typ, val, TAG_VALUE_NULL)
 			}
 		case reflect.Slice:
 			{
 				typ = val.Type().Elem()
 				val = reflect.New(typ).Elem()
-				s.parseStructField(typ, val, tagNames...)
+				s.parseStructField(typ, val, TAG_VALUE_NULL)
 			}
 		case reflect.Map:
 			{
@@ -92,6 +93,7 @@ func (s *ModelReflector) ToMap(tagNames ...string) map[string]interface{} {
 			log.Warnf("kind [%v] not support yet", typ.Kind())
 		}
 	}
+	log.Json("dictionary", s.dict)
 	return s.dict
 }
 
@@ -114,7 +116,7 @@ func (s *ModelReflector) getTag(sf reflect.StructField, tagName string) (strValu
 }
 
 // parse struct fields
-func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, tagNames ...string) {
+func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, tagParent string) {
 	kind := typ.Kind()
 	if kind == reflect.Struct {
 		NumField := val.NumField()
@@ -133,46 +135,37 @@ func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, t
 			if ignore {
 				continue
 			}
+			if tagParent != "" {
+				tagVal = fmt.Sprintf("%s.%s", tagParent, tagVal)
+			}
 			if typField.Type.Kind() == reflect.Struct || typField.Type.Kind() == reflect.Slice || typField.Type.Kind() == reflect.Map {
 				s.dict[tagVal] = valField.Interface()
+				if typField.Type.Kind() == reflect.Struct {
+					s.parseStructField(typField.Type, valField, tagVal)
+				}
 			} else {
-				s.setValueByField(typField, valField, tagNames...) // save field tag value and field value to map
+				s.setValueByField(typField, valField, tagVal) // save field tag value and field value to map
 			}
 		}
 	}
-}
-
-//parse decimal
-func (s *ModelReflector) parseValuer(field reflect.StructField, val reflect.Value, tagNames ...string) {
-	s.setValueByField(field, val, tagNames...)
 }
 
 //trim the field value's first and last blank character and save to map
-func (s *ModelReflector) setValueByField(field reflect.StructField, val reflect.Value, tagNames ...string) {
-
-	if len(tagNames) == 0 {
-		log.Errorf("ModelReflector.setValueByField no tag to set value")
+func (s *ModelReflector) setValueByField(field reflect.StructField, val reflect.Value, tagVal string) {
+	_, ignore := s.getTag(field, TAG_NAME_BSON)
+	if ignore {
 		return
 	}
-
-	var tagVal string
-	for _, v := range tagNames {
-		strTagValue, ignore := s.getTag(field, v)
-		//parse db、json、protobuf tag
-		tagVal = handleTagValue(v, strTagValue)
-		if ignore {
-			break
-		}
-		if tagVal != "" {
-			//log.Debugf("ModelReflector.setValueByField tag [%v] value [%+v]", tagVal, val.Interface())
-			if d, ok := val.Interface().(driver.Valuer); ok {
-				s.dict[tagVal], _ = d.Value()
-			} else {
-				s.dict[tagVal] = val.Interface()
-			}
-			break
+	//parse db、json、protobuf tag
+	tagVal = handleTagValue(TAG_NAME_BSON, tagVal)
+	if tagVal != "" {
+		if d, ok := val.Interface().(driver.Valuer); ok {
+			s.dict[tagVal], _ = d.Value()
+		} else {
+			s.dict[tagVal] = val.Interface()
 		}
 	}
+
 }
 
 //fetch row data to map
@@ -316,11 +309,9 @@ func handleTagValue(strTagName, strTagValue string) string {
 }
 
 func (e *Engine) getTagValue(sf reflect.StructField) (strValue string) {
-	for _, v := range dbTags { //support multiple tag
-		strValue = handleTagValue(v, sf.Tag.Get(v))
-		if strValue != "" {
-			return
-		}
+	strValue = handleTagValue(TAG_NAME_BSON, sf.Tag.Get(TAG_NAME_BSON))
+	if strValue != "" {
+		return
 	}
 	return
 }
