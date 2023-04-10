@@ -52,6 +52,14 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	var opt = makeOption(opts...)
 	ctx, cancel := ContextWithTimeout(opt.ConnectTimeout)
 	defer cancel()
+	if opt != nil && opt.SSH != nil {
+		var err error
+		strDSN, err = opt.SSH.openSSHTunnel(strDSN)
+		if err != nil {
+			log.Panic(err.Error())
+			return nil, err
+		}
+	}
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(strDSN))
 	if err != nil {
 		return nil, log.Errorf("connect %s error [%s]", strDSN, err)

@@ -1,6 +1,7 @@
 package mgoc
 
 import (
+	"github.com/civet148/log"
 	"net/url"
 	"strings"
 )
@@ -127,4 +128,19 @@ func ParseUrl(strUrl string) (ui *UrlInfo) {
 func getDatabaseName(strPath string) string {
 	idx := strings.LastIndex(strPath, "/")
 	return strPath[idx+1:]
+}
+
+func getHostPort(strHost string) (ip, port string) {
+	if strHost == "" {
+		log.Panic("host is empty")
+	}
+	ipport := strings.Split(strHost, ":")
+	if len(ipport) == 2 {
+		ip = ipport[0]
+		port = ipport[1]
+	} else {
+		ip = ipport[0]
+		port = "27017"
+	}
+	return
 }

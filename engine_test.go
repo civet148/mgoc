@@ -33,7 +33,21 @@ type Student struct {
 }
 
 func TestMongoDBCases(t *testing.T) {
-	e, err := NewEngine(defaultMongoUrl)
+	opt := &Option{
+		Debug: true,
+		Max:   100,
+		Idle:  5,
+		//SSH: &SSH{
+		//	User:     "root",
+		//	Password: "123456",
+		//	Host:     "192.168.2.19:22",
+		//},
+		ConnectTimeout: 3,
+		WriteTimeout:   60,
+		ReadTimeout:    60,
+		DatabaseOpt:    nil,
+	}
+	e, err := NewEngine(defaultMongoUrl, opt)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
