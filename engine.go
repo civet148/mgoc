@@ -134,6 +134,9 @@ func (e *Engine) PrimaryKey() string {
 // use to get result set, support single struct object or slice [pointer type]
 // notice: will clone a new engine object for orm operations(query/update/insert/upsert)
 func (e *Engine) Model(args ...interface{}) *Engine {
+	if e.db == nil {
+		log.Panic("no database specified")
+	}
 	return e.clone(e.db.Name(), args...)
 }
 
