@@ -488,6 +488,38 @@ func (e *Engine) LessEqual(strColumn string, value interface{}) *Engine {
 	return e
 }
 
+func (e *Engine) GreaterLessThan(strColumn string, value1, value2 interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyGreaterThan: value1,
+		KeyLessThan:    value2,
+	}
+	return e
+}
+
+func (e *Engine) GreaterLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyGreaterEqual: value1,
+		KeyLessEqual:    value2,
+	}
+	return e
+}
+
+func (e *Engine) GreaterThanLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyGreaterThan: value1,
+		KeyLessEqual:   value2,
+	}
+	return e
+}
+
+func (e *Engine) GreaterEqualLessThan(strColumn string, value1, value2 interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyGreaterEqual: value1,
+		KeyLessThan:     value2,
+	}
+	return e
+}
+
 func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
 		KeyRegex: value,
