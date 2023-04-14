@@ -295,7 +295,7 @@ func (e *Engine) makeFilters() {
 	e.filter = e.replaceObjectID(e.filter)
 }
 
-//replaceObjectID replace filter _id string to ObjectID
+//replaceObjectID replace filter _id string to Str2ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 	assert(filter, "filter cannot be nil")
 	for k, v := range filter {
@@ -415,4 +415,58 @@ func (e *Engine) makeOrCondition() (cond bson.A) {
 		cond = append(cond, bson.M{k: v})
 	}
 	return
+}
+
+func (e *Engine) replaceInsertModels() {
+	var mms []map[string]interface{}
+
+	for _, model := range e.models {
+		typ := reflect.TypeOf(model)
+		val := reflect.ValueOf(model)
+		for {
+			if typ.Kind() != reflect.Ptr { // pointer type
+				break
+			}
+			typ = typ.Elem()
+			val = val.Elem()
+		}
+
+		kind := typ.Kind()
+		switch kind {
+		case reflect.Struct:
+			{
+				var mm = make(map[string]interface{})
+				NumField := val.NumField()
+				for i := 0; i < NumField; i++ {
+					typField := typ.Field(i)
+					valField := val.Field(i)
+
+					if typField.Type.Kind() == reflect.Ptr {
+						typField.Type = typField.Type.Elem()
+						valField = valField.Elem()
+					}
+					if !valField.IsValid() || !valField.CanInterface() {
+						continue
+					}
+					tagVal, ignore := getTagValue(typField, TAG_NAME_BSON)
+					if ignore {
+						continue
+					}
+					if tagVal == defaultPrimaryKeyName {
+						id := ObjectID(valField.Interface())
+						if id != nil {
+							mm[tagVal] = id
+						}
+					} else {
+						mm[tagVal] = valField.Interface()
+					}
+				}
+				mms = append(mms, mm)
+			}
+		}
+	}
+	e.models = nil
+	for _, m := range mms {
+		e.models = append(e.models, m)
+	}
 }

@@ -3,7 +3,6 @@ package mgoc
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
 	"github.com/civet148/log"
 	"reflect"
@@ -24,15 +23,6 @@ type ModelReflector struct {
 	value  interface{}            //model value
 	engine *Engine                //database engine
 	dict   map[string]interface{} //dictionary of structure tag and value
-}
-
-type Fetcher struct {
-	count     int               //column count in db table
-	cols      []string          //column names in db table
-	types     []*sql.ColumnType //column types in db table
-	arrValues [][]byte          //value slice
-	mapValues map[string]string //value map
-	arrIndex  int               //fetch index
 }
 
 func newReflector(e *Engine, v interface{}) *ModelReflector {
@@ -93,6 +83,10 @@ func (s *ModelReflector) ToMap() map[string]interface{} {
 			log.Warnf("kind [%v] not support yet", typ.Kind())
 		}
 	}
+	for k, v := range s.dict {
+		value := ConvertValue(k, v)
+		s.dict[k] = value
+	}
 	//log.Json("dictionary", s.dict)
 	return s.dict
 }
@@ -106,11 +100,14 @@ func (s *ModelReflector) convertMapString(ms map[string]string) (mi map[string]i
 }
 
 // get struct field's tag value
-func (s *ModelReflector) getTag(sf reflect.StructField, tagName string) (strValue string, ignore bool) {
-
+func getTagValue(sf reflect.StructField, tagName string) (strValue string, ignore bool) {
 	strValue = sf.Tag.Get(tagName)
 	if strValue == TAG_VALUE_IGNORE {
 		return "", true
+	}
+	if tagName == TAG_NAME_BSON {
+		vs := strings.Split(strValue, ",")
+		strValue = vs[0]
 	}
 	return
 }
@@ -131,7 +128,7 @@ func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, t
 			if !valField.IsValid() || !valField.CanInterface() {
 				continue
 			}
-			tagVal, ignore := s.getTag(typField, TAG_NAME_BSON)
+			tagVal, ignore := getTagValue(typField, TAG_NAME_BSON)
 			if ignore {
 				continue
 			}
@@ -152,7 +149,7 @@ func (s *ModelReflector) parseStructField(typ reflect.Type, val reflect.Value, t
 
 //trim the field value's first and last blank character and save to map
 func (s *ModelReflector) setValueByField(field reflect.StructField, val reflect.Value, tagVal string) {
-	_, ignore := s.getTag(field, TAG_NAME_BSON)
+	_, ignore := getTagValue(field, TAG_NAME_BSON)
 	if ignore {
 		return
 	}
@@ -165,134 +162,6 @@ func (s *ModelReflector) setValueByField(field reflect.StructField, val reflect.
 			s.dict[tagVal] = val.Interface()
 		}
 	}
-
-}
-
-//fetch row data to map
-func (e *Engine) fetchToMap(fetcher *Fetcher, arg interface{}) (err error) {
-
-	typ := reflect.TypeOf(arg)
-
-	if typ.Kind() == reflect.Ptr {
-
-		for k, v := range fetcher.mapValues {
-			m := *arg.(*map[string]string) //just support map[string]string type
-			m[k] = v
-		}
-	}
-
-	return
-}
-
-//fetch row data to struct
-func (e *Engine) fetchToStruct(fetcher *Fetcher, typ reflect.Type, val reflect.Value) (err error) {
-
-	if typ.Kind() == reflect.Ptr {
-
-		typ = typ.Elem()
-		val = val.Elem()
-	}
-
-	if typ.Kind() == reflect.Struct {
-		NumField := val.NumField()
-		for i := 0; i < NumField; i++ {
-			typField := typ.Field(i)
-			valField := val.Field(i)
-			e.fetchToStructField(fetcher, typField.Type, typField, valField)
-		}
-	}
-	return
-}
-
-func (e *Engine) fetchToStructField(fetcher *Fetcher, typ reflect.Type, field reflect.StructField, val reflect.Value) {
-
-	//	log.Debugf("typField name [%s] type [%s] valField can addr [%v]", field.Name, field.Type.Kind(), val.CanAddr())
-	switch typ.Kind() {
-	case reflect.Struct:
-		{
-			e.fetchToStructAny(fetcher, field, val)
-		}
-	case reflect.Slice:
-		if e.getTagValue(field) != "" {
-			_ = e.fetchToJsonObject(fetcher, field, val)
-		}
-	case reflect.Map: //ignore...
-	case reflect.Ptr:
-		{
-			typElem := field.Type.Elem()
-			if val.IsNil() {
-				valNew := reflect.New(typElem)
-				val.Set(valNew)
-			}
-			e.fetchToStructField(fetcher, typElem, field, val.Elem())
-		}
-	default:
-		{
-			_ = e.setValueByField(fetcher, field, val) //assign value to struct field
-		}
-	}
-}
-
-func (e *Engine) fetchToStructAny(fetcher *Fetcher, field reflect.StructField, val reflect.Value) {
-	if _, ok := val.Addr().Interface().(sql.Scanner); ok {
-		e.fetchToScanner(fetcher, field, val)
-	} else {
-		if e.getTagValue(field) != "" {
-			_ = e.fetchToJsonObject(fetcher, field, val)
-		} else {
-			_ = e.fetchToStruct(fetcher, field.Type, val)
-		}
-	}
-}
-
-//json string unmarshal to struct/slice
-func (e *Engine) fetchToJsonObject(fetcher *Fetcher, field reflect.StructField, val reflect.Value) (err error) {
-	//优先给有db标签的成员变量赋值
-	strDbTagVal := e.getTagValue(field)
-	if strDbTagVal == TAG_VALUE_IGNORE {
-		return
-	}
-
-	if v, ok := fetcher.mapValues[strDbTagVal]; ok {
-		vp := val.Addr()
-		if strings.TrimSpace(v) != "" {
-			if err = json.Unmarshal([]byte(v), vp.Interface()); err != nil {
-				return log.Errorf("json.Unmarshal [%s] error [%s]", v, err)
-			}
-		} else {
-			//if struct field is a slice type and content is nil make space for it
-			if field.Type.Kind() == reflect.Slice {
-				val.Set(reflect.MakeSlice(field.Type, 0, 0))
-			}
-		}
-	}
-	return
-}
-
-//fetch to struct object by customize scanner
-func (e *Engine) fetchToScanner(fetcher *Fetcher, field reflect.StructField, val reflect.Value) {
-	//优先给有db标签的成员变量赋值
-	strDbTagVal := e.getTagValue(field)
-	if strDbTagVal == TAG_VALUE_IGNORE {
-		return
-	}
-	if v, ok := fetcher.mapValues[strDbTagVal]; ok {
-		vp := val.Addr()
-		d := vp.Interface().(sql.Scanner)
-		if v == "" {
-			return
-		}
-		if err := d.Scan(v); err != nil {
-			log.Errorf("scan '%v' to scanner [%+v] error [%+v]", v, vp.Interface(), err.Error())
-		}
-	}
-}
-
-func (e *Engine) fetchToBaseType(fetcher *Fetcher, typ reflect.Type, val reflect.Value) (err error) {
-	v := fetcher.arrValues[fetcher.arrIndex]
-	e.setValue(typ, val, string(v))
-	fetcher.arrIndex++
-	return
 }
 
 func handleTagValue(strTagName, strTagValue string) string {
@@ -308,29 +177,8 @@ func handleTagValue(strTagName, strTagValue string) string {
 	return strTagValue
 }
 
-func (e *Engine) getTagValue(sf reflect.StructField) (strValue string) {
-	strValue = handleTagValue(TAG_NAME_BSON, sf.Tag.Get(TAG_NAME_BSON))
-	if strValue != "" {
-		return
-	}
-	return
-}
-
-//按结构体字段标签赋值
-func (e *Engine) setValueByField(fetcher *Fetcher, field reflect.StructField, val reflect.Value) (err error) {
-	//优先给有db标签的成员变量赋值
-	strDbTagVal := e.getTagValue(field)
-	if strDbTagVal == TAG_VALUE_IGNORE {
-		return
-	}
-	if v, ok := fetcher.mapValues[strDbTagVal]; ok {
-		e.setValue(field.Type, val, v)
-	}
-	return
-}
-
 //将string存储的值赋值到变量
-func (e *Engine) setValue(typ reflect.Type, val reflect.Value, v string) {
+func setValue(typ reflect.Type, val reflect.Value, v string) {
 	switch typ.Kind() {
 	case reflect.Struct:
 		s, ok := val.Addr().Interface().(sql.Scanner)
@@ -361,7 +209,7 @@ func (e *Engine) setValue(typ reflect.Type, val reflect.Value, v string) {
 	case reflect.Ptr:
 		typ = typ.Elem()
 		//val = val.Elem()
-		e.setValue(typ, val, v)
+		setValue(typ, val, v)
 	default:
 		log.Fatalf("can't assign value [%v] to variant type [%v]", v, typ.Kind())
 		return

@@ -171,6 +171,7 @@ func (e *Engine) Insert() ([]interface{}, error) {
 	var ids []interface{}
 	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
 	defer cancel()
+	e.replaceInsertModels()
 	col := e.Collection(e.strTableName)
 	if e.modelType == ModelType_Slice {
 		var opts []*options.InsertManyOptions
@@ -345,7 +346,7 @@ func (e *Engine) Select(strColumns ...string) *Engine {
 	return e
 }
 
-// Except except columns
+// Except insert/update all except columns
 func (e *Engine) Except(strColumns ...string) *Engine {
 	e.setExceptColumns(strColumns...)
 	return e
@@ -447,89 +448,117 @@ func (e *Engine) Or(strColumn string, value interface{}) *Engine {
 }
 
 func (e *Engine) Equal(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyEqual: value,
+		KeyEqual: v,
 	}
 	return e
 }
 
 func (e *Engine) NotEqual(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyNotEqual: value,
+		KeyNotEqual: v,
 	}
 	return e
 }
 
 func (e *Engine) GreaterThan(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterThan: value,
+		KeyGreaterThan: v,
 	}
 	return e
 }
 
 func (e *Engine) GreaterEqual(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: value,
+		KeyGreaterEqual: v,
 	}
 	return e
 }
 
 func (e *Engine) LessThan(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyLessThan: value,
+		KeyLessThan: v,
 	}
 	return e
 }
 
 func (e *Engine) LessEqual(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyLessEqual: value,
+		KeyLessEqual: v,
 	}
 	return e
 }
 
 func (e *Engine) GreaterLessThan(strColumn string, value1, value2 interface{}) *Engine {
+	var v1, v2 interface{}
+	v1 = ConvertValue(strColumn, value1)
+	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterThan: value1,
-		KeyLessThan:    value2,
+		KeyGreaterThan: v1,
+		KeyLessThan:    v2,
 	}
 	return e
 }
 
 func (e *Engine) GreaterLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+	var v1, v2 interface{}
+	v1 = ConvertValue(strColumn, value1)
+	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: value1,
-		KeyLessEqual:    value2,
+		KeyGreaterEqual: v1,
+		KeyLessEqual:    v2,
 	}
 	return e
 }
 
 func (e *Engine) GreaterThanLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+	var v1, v2 interface{}
+	v1 = ConvertValue(strColumn, value1)
+	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterThan: value1,
-		KeyLessEqual:   value2,
+		KeyGreaterThan: v1,
+		KeyLessEqual:   v2,
 	}
 	return e
 }
 
 func (e *Engine) GreaterEqualLessThan(strColumn string, value1, value2 interface{}) *Engine {
+	var v1, v2 interface{}
+	v1 = ConvertValue(strColumn, value1)
+	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: value1,
-		KeyLessThan:     value2,
+		KeyGreaterEqual: v1,
+		KeyLessThan:     v2,
 	}
 	return e
 }
 
 func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyRegex: value,
+		KeyRegex: v,
 	}
 	return e
 }
 
 func (e *Engine) Exists(strColumn string, value bool) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyExists: value,
+		KeyExists: v,
 	}
 	return e
 }
