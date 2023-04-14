@@ -59,11 +59,11 @@ func TestMongoDBCases(t *testing.T) {
 	//e.Use("test") //switch to other database
 	e.Debug(true)
 	//Insert(e)
-	Query(e)
-	Update(e)
-	Count(e)
-	//Delete(e)
-	Aggregate(e)
+	//Query(e)
+	//Update(e)
+	//Count(e)
+	Delete(e)
+	//Aggregate(e)
 }
 
 func Query(e *Engine) {
@@ -265,10 +265,11 @@ func Delete(e *Engine) {
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
 		Options(&options.DeleteOptions{}).
-		Filter(bson.M{
-			"name": "lory2",
-			"age":  18,
-		}).
+		//Filter(bson.M{
+		//	"name": "lory2",
+		//	"age":  18,
+		//}).
+		Id(officialObjectId).
 		Delete()
 	if err != nil {
 		log.Errorf(err.Error())

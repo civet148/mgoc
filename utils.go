@@ -2,8 +2,6 @@ package mgoc
 
 import (
 	"encoding/hex"
-	"fmt"
-	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	bson2 "gopkg.in/mgo.v2/bson"
 )
@@ -27,12 +25,7 @@ func ObjectID(v interface{}) (id interface{}) {
 	switch v.(type) {
 	case string:
 		{
-			oid, err := Str2ObjectID(v.(string))
-			if err != nil {
-				log.Errorf(err.Error())
-				return v
-			}
-			id = oid
+			id = Str2ObjectID(v.(string))
 		}
 	case primitive.ObjectID:
 		{
@@ -45,12 +38,7 @@ func ObjectID(v interface{}) (id interface{}) {
 			if len(hexid) == 0 {
 				return nil
 			}
-			oid, err := Str2ObjectID(vid.Hex())
-			if err != nil {
-				log.Errorf(err.Error())
-				return v
-			}
-			id = oid
+			id = Str2ObjectID(vid.Hex())
 		}
 	default:
 		id = v
@@ -58,29 +46,29 @@ func ObjectID(v interface{}) (id interface{}) {
 	return
 }
 
-func Str2ObjectID(strId string) (id interface{}, err error) {
+func Str2ObjectID(strId string) (id interface{}) {
 	//log.Debugf("id [%v]", strId)
 	if len(strId) == 0 {
-		return nil, nil
+		return nil
 	}
 	if len(strId) == OfficalObjectIdSize { //mongo-driver ObjectID
 		oid, err := primitive.ObjectIDFromHex(strId)
 		if err != nil {
-			return nil, fmt.Errorf("parse object id from string %s error %s", strId, err)
+			return strId
 		}
 		//log.Debugf("mongo-driver id [%v]", oid)
-		return oid, nil
+		return oid
 	} else if len(strId) == MgoV2ObjectIdSize { //mgo.v2 ObjectId
 		hexid, err := hex.DecodeString(strId)
 		if err != nil {
-			return nil, fmt.Errorf("decode mgo.v2 object id from string [%s] error [%s]", strId, err)
+			return strId
 		}
 		oid, err := primitive.ObjectIDFromHex(string(hexid))
 		if err != nil {
-			return nil, fmt.Errorf("parse object id from string %s error %s", strId, err)
+			return strId
 		}
 		//log.Debugf("mgo.v2 id [%v]", oid)
-		return oid, nil
+		return oid
 	}
-	return strId, nil
+	return strId
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -324,19 +323,7 @@ func (e *Engine) Limit(n int) *Engine {
 }
 
 func (e *Engine) Id(v interface{}) *Engine {
-	switch v.(type) {
-	case string:
-		{
-			oid, err := primitive.ObjectIDFromHex(v.(string))
-			if err != nil {
-				log.Errorf("parse object id from string %s error %s", v.(string), err)
-				return e
-			}
-			e.filter[defaultPrimaryKeyName] = oid
-		}
-	default:
-		e.filter[defaultPrimaryKeyName] = v
-	}
+	e.filter[defaultPrimaryKeyName] = ObjectID(v)
 	return e
 }
 
