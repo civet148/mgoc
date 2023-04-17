@@ -119,8 +119,11 @@ func (e *Engine) Debug(on bool) {
 
 // Use clone another instance and switch to database specified
 func (e *Engine) Use(strDatabase string, opts ...*options.DatabaseOptions) *Engine {
-	e.db = e.client.Database(strDatabase, opts...)
-	return e
+	if e.db == nil {
+		e.db = e.client.Database(strDatabase, opts...)
+		return e
+	}
+	return e.clone(strDatabase, nil)
 }
 
 // Database get database instance specified
