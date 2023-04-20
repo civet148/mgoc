@@ -1,7 +1,6 @@
 package mgoc
 
 import (
-	"encoding/hex"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -58,21 +57,19 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	//Insert(e)
-	//Query(e)
-	//Update(e)
-	//Count(e)
+	Insert(e)
+	Query(e)
+	Update(e)
+	Count(e)
 	Delete(e)
-	//Aggregate(e)
+	Aggregate(e)
 }
 
 func Query(e *Engine) {
 	var err error
 	var student *Student
-	sid := hex.EncodeToString([]byte(officialObjectId)) //mgo.v2 ObjectId string
 	err = e.Model(&student).
 		Table(TableNameStudentInfo).
-		Equal("_id", sid).
 		Query()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -84,11 +81,6 @@ func Query(e *Engine) {
 	err = e.Model(&students).
 		Table(TableNameStudentInfo).
 		Options(&options.FindOptions{}).
-		Filter(bson.M{
-			"name": "john",
-			//"age":  18,
-		}).
-		//Equal("extra_data.id_card", "2023001").
 		Desc("created_time").
 		Limit(2).
 		Query()

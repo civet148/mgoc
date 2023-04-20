@@ -2,12 +2,14 @@ package mgoc
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	bson2 "gopkg.in/mgo.v2/bson"
 	"reflect"
 	"strings"
 )
@@ -335,6 +337,7 @@ func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
 	} else {
 		err = log.Errorf("unknown model type %s", e.modelType)
 	}
+	e.replaceQueryObjectID()
 	return
 }
 
@@ -468,5 +471,81 @@ func (e *Engine) replaceInsertModels() {
 	e.models = nil
 	for _, m := range mms {
 		e.models = append(e.models, m)
+	}
+}
+
+// replaceQueryObjectID parse struct and replace mgo.v2 ObjectId
+func (e *Engine) replaceQueryObjectID() {
+	for _, model := range e.models {
+		typ := reflect.TypeOf(model)
+		val := reflect.ValueOf(model)
+		for {
+			if typ.Kind() != reflect.Ptr { // pointer type
+				break
+			}
+			typ = typ.Elem()
+			val = val.Elem()
+		}
+
+		kind := typ.Kind()
+		switch kind {
+		case reflect.Struct:
+			{
+				e.replaceStructFiledObjectId(typ, val)
+			}
+		case reflect.Slice:
+			{
+				for i := 0; i < val.Len(); i++ {
+					childTyp := reflect.TypeOf(val.Index(i).Interface())
+					childVal := reflect.ValueOf(val.Interface()).Index(i)
+					if childVal.Kind() == reflect.Ptr {
+						childTyp = childTyp.Elem()
+						childVal = childVal.Elem()
+					}
+					//log.Debugf("slice[%d] type [%v] %+v", i, childTyp, childVal)
+					e.replaceStructFiledObjectId(childTyp, childVal)
+				}
+			}
+		default:
+		}
+	}
+}
+
+// replaceStructFiledObjectId parse struct fields and replace mgo.v2 ObjectId value
+func (e *Engine) replaceStructFiledObjectId(typ reflect.Type, val reflect.Value) {
+	kind := typ.Kind()
+	if kind == reflect.Struct {
+		NumField := val.NumField()
+		for i := 0; i < NumField; i++ {
+			typField := typ.Field(i)
+			valField := val.Field(i)
+			if !valField.IsValid() || !valField.CanInterface() {
+				continue
+			}
+			tagVal, ignore := getTagValue(typField, TAG_NAME_BSON)
+			if ignore {
+				continue
+			}
+			//log.Debugf("type [%v] tag [%s] value [%v]", typField.Type, tagVal, valField.Interface())
+			if tagVal == e.PrimaryKey() {
+				vid := valField.Interface()
+				switch valField.Interface().(type) {
+				case bson2.ObjectId:
+					{
+						id := vid.(bson2.ObjectId)
+						hid := id.Hex()
+						if len(hid) == MgoV2ObjectIdSize {
+							data, err := hex.DecodeString(hid)
+							if err != nil {
+								log.Errorf(err.Error())
+								return
+							}
+							oid := bson2.ObjectIdHex(string(data))
+							valField.Set(reflect.ValueOf(oid))
+						}
+					}
+				}
+			}
+		}
 	}
 }

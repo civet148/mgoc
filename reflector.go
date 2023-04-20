@@ -183,7 +183,7 @@ func setValue(typ reflect.Type, val reflect.Value, v string) {
 	case reflect.Struct:
 		s, ok := val.Addr().Interface().(sql.Scanner)
 		if !ok {
-			log.Warnf("struct type %s not implement sql.Scanner interface", typ.Name())
+			//log.Warnf("struct type %s not implement sql.Scanner interface", typ.Name())
 			return
 		}
 		if err := s.Scan(v); err != nil {

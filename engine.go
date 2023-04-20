@@ -266,7 +266,11 @@ func (e *Engine) Query() (err error) {
 		return log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	return e.fetchRows(cur)
+	err = e.fetchRows(cur)
+	if err != nil {
+		return log.Errorf(err.Error())
+	}
+	return nil
 }
 
 // Count orm count documents
@@ -317,7 +321,11 @@ func (e *Engine) QueryEx() (total int64, err error) {
 		return 0, log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	return total, e.fetchRows(cur)
+	err = e.fetchRows(cur)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return total, nil
 }
 
 func (e *Engine) Limit(n int) *Engine {
