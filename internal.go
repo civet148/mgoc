@@ -319,7 +319,7 @@ func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 }
 
 func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
-	if e.modelType == ModelType_Struct {
+	if e.modelType == ModelType_Struct || e.modelType == ModelType_Map {
 		for _, model := range e.models {
 			if !cur.Next(context.TODO()) {
 				break
@@ -335,7 +335,7 @@ func (e *Engine) fetchRows(cur *mongo.Cursor) (err error) {
 			return log.Errorf(err.Error())
 		}
 	} else {
-		err = log.Errorf("unknown model type %s", e.modelType)
+		return log.Errorf("model type %s not support yet", e.modelType)
 	}
 	e.replaceQueryObjectID()
 	return
