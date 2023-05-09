@@ -568,3 +568,61 @@ func (e *Engine) Page(pageNo, pageSize int) *Engine {
 	}
 	return e
 }
+
+func Sum(expr interface{}) bson.M {
+	return bson.M{
+		KeySum: expr,
+	}
+}
+
+func ToBool(expr interface{}) bson.M {
+	return bson.M{
+		toBool: expr,
+	}
+}
+
+func ToDecimal(expr interface{}) bson.M {
+	return bson.M{
+		toDecimal: expr,
+	}
+}
+func ToDouble(expr interface{}) bson.M {
+	return bson.M{
+		toDouble: expr,
+	}
+}
+func ToInt(expr interface{}) bson.M {
+	return bson.M{
+		toInt: expr,
+	}
+}
+func ToLong(expr interface{}) bson.M {
+	return bson.M{
+		toLong: expr,
+	}
+}
+func ToDate(expr interface{}) bson.M {
+	return bson.M{
+		toDate: expr,
+	}
+}
+func ToString(expr interface{}) bson.M {
+	return bson.M{
+		toString: expr,
+	}
+}
+func ToObjectId(expr interface{}) bson.M {
+	return bson.M{
+		toObjectId: expr,
+	}
+}
+func ToLower(expr interface{}) bson.M {
+	return bson.M{
+		toLower: expr,
+	}
+}
+func ToUpper(expr interface{}) bson.M {
+	return bson.M{
+		toUpper: expr,
+	}
+}
