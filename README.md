@@ -64,7 +64,7 @@ processManagement:
 ```shell
 
 # start mongodb by docker
-$ docker run -p 27017:27017 --restart always  --log-opt max-size=500m -v /data/mongodb/conf/mongod.conf:/etc/mongod.conf -v /data/mongodb/db:/data/db --name mongodb -d mongo:4.4.10
+$ docker run -p 27017:27017 --restart always -v /data/mongodb/db:/data/db --name mongodb -d mongo:4.4.10
 ```
 
 - create account
@@ -118,3 +118,4 @@ func main() {
 	}
 }
 ```
+

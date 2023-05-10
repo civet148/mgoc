@@ -4,35 +4,41 @@ import (
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	//bson2 "gopkg.in/mgo.v2/bson"
-	bson2 "gopkg.in/mgo.v2/bson"
+
 	"testing"
 	"time"
 )
 
 const (
-	officialObjectId     = "6438f32fd71fc42e601558aa"
 	TableNameStudentInfo = "student_info"
-	defaultMongoUrl      = "mongodb://root:123456@192.168.2.9:27017/test?authSource=admin"
+	TableNameRestaurant  = "restaurant"
 )
 
-type ExtraData struct {
+type extraData struct {
 	IdCard      string   `json:"id_card" bson:"id_card"`
 	HomeAddress string   `json:"home_address" bson:"home_address"`
 	Sports      []string `json:"sports" bson:"sports"`
 }
 
-type Student struct {
-	Id bson2.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
-	//Id          string    `json:"_id,omitempty" bson:"_id,omitempty"`
+type docStudent struct {
+	//Id bson2.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
+	Id          string    `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name        string    `json:"name" bson:"name"`
 	Sex         string    `json:"sex" bson:"sex"`
 	Age         int       `json:"age" bson:"age"`
 	Balance     Decimal   `json:"balance" bson:"balance"`
 	ClassNo     string    `json:"class_no" bson:"class_no"`
 	CreatedTime time.Time `json:"created_time" bson:"created_time"`
-	ExtraData   ExtraData `json:"extra_data" bson:"extra_data"`
+	ExtraData   extraData `json:"extra_data" bson:"extra_data"`
 }
+
+type docRestaurant struct {
+}
+
+const (
+	officialObjectId = "6438f32fd71fc42e601558aa"
+	defaultMongoUrl  = "mongodb://root:123456@192.168.2.146:27017/test?authSource=admin"
+)
 
 var opt = &Option{
 	Debug: true,
@@ -59,15 +65,20 @@ func TestMongoDBCases(t *testing.T) {
 	e.Debug(true)
 	Insert(e)
 	Query(e)
+	GeoQuery(e)
 	Update(e)
 	Count(e)
 	Delete(e)
 	Aggregate(e)
 }
 
+func GeoQuery(e *Engine) {
+
+}
+
 func Query(e *Engine) {
 	var err error
-	var student *Student
+	var student *docStudent
 	err = e.Model(&student).
 		Table(TableNameStudentInfo).
 		Query()
@@ -77,7 +88,7 @@ func Query(e *Engine) {
 	}
 	log.Infof("single student %+v", student)
 
-	var students []*Student
+	var students []*docStudent
 	err = e.Model(&students).
 		Table(TableNameStudentInfo).
 		Options(&options.FindOptions{}).
@@ -93,7 +104,7 @@ func Query(e *Engine) {
 		log.Infof("student %+v", student)
 	}
 	var total int64
-	var students2 []*Student
+	var students2 []*docStudent
 	total, err = e.Model(&students2).
 		Select("name", "sex", "balance", "created_time").
 		Options(&options.FindOptions{}).
@@ -109,7 +120,7 @@ func Query(e *Engine) {
 		log.Infof("student %+v", student)
 	}
 
-	var students3 []*Student
+	var students3 []*docStudent
 	err = e.Model(&students3).
 		Select("name", "sex", "balance", "created_time").
 		Options(&options.FindOptions{}).
@@ -145,41 +156,41 @@ func Count(e *Engine) {
 }
 
 func Insert(e *Engine) {
-	var student = &Student{
+	var student = &docStudent{
 		Name:        "john1",
 		Sex:         "male",
 		Age:         3,
 		ClassNo:     "CLASS-3",
 		Balance:     NewDecimal("532.324"),
 		CreatedTime: time.Now(),
-		ExtraData: ExtraData{
+		ExtraData: extraData{
 			IdCard:      "2023001",
 			HomeAddress: "sz 003",
 			Sports:      []string{"football", "badmin"},
 		},
 	}
-	var students = []*Student{
+	var students = []*docStudent{
 		{
-			Id:          bson2.NewObjectId(),
+			//Id:          bson2.NewObjectId(),
 			Name:        "lory2",
 			Sex:         "male",
 			Age:         18,
 			ClassNo:     "CLASS-1",
 			CreatedTime: time.Now(),
-			ExtraData: ExtraData{
+			ExtraData: extraData{
 				IdCard:      "2023002",
 				HomeAddress: "sz no 101",
 				Sports:      []string{"football", "baseball"},
 			},
 		},
 		{
-			Id:          bson2.NewObjectId(),
+			//Id:          bson2.NewObjectId(),
 			Name:        "katy3",
 			Sex:         "female",
 			Age:         28,
 			ClassNo:     "CLASS-2",
 			CreatedTime: time.Now(),
-			ExtraData: ExtraData{
+			ExtraData: extraData{
 				IdCard:      "2023003",
 				HomeAddress: "london no 102",
 				Sports:      []string{"singing", "dance"},
@@ -222,7 +233,7 @@ func Update(e *Engine) {
 	//	return
 	//}
 	//
-	var s *Student
+	var s *docStudent
 	err = e.Model(&s).
 		Table(TableNameStudentInfo).
 		Id(officialObjectId).
@@ -232,7 +243,7 @@ func Update(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
-	var student = &Student{
+	var student = &docStudent{
 		Id:          officialObjectId,
 		Name:        "kary",
 		Sex:         "female",
