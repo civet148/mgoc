@@ -1,7 +1,8 @@
-# mgoc
-mongodb ORM client
+<h1 align="center"> MongoDB ORM client - mgoc </h1>
 
-# deploy mongodb
+ 
+
+## Deploy MongoDB
 
 - configuration
 
@@ -58,7 +59,7 @@ processManagement:
 #snmp:
 
 ```
-- set up mongodb docker container
+- setting up mongodb docker container
 
 ```shell
 
@@ -74,7 +75,7 @@ $ docker exec -it mongodb mongo admin
 > db.createUser({user:"root", pwd: "123456", roles: ["root"]})
 ```
 
-# quick start
+## Quick Start
 
 ```go
 package main
@@ -86,12 +87,6 @@ import (
     "go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ExtraData struct {
-	IdCard      string   `bson:"id_card"`
-	HomeAddress string   `bson:"home_address"`
-	Sports      []string `bson:"sports"`
-}
-
 type Student struct {
 	Id          string    `bson:"_id,omitempty"`
 	Name        string    `bson:"name"`
@@ -99,7 +94,6 @@ type Student struct {
 	Age         int       `bson:"age"`
 	ClassNo     string    `bson:"class_no"`
 	CreatedTime time.Time `bson:"created_time"`
-	ExtraData   ExtraData `bson:"extra_data"`
 }
 
 func main() {
@@ -112,10 +106,8 @@ func main() {
 	err = e.Model(&students).
             Table("student_info").
             Options(&options.FindOptions{}).
-            Filter(bson.M{
-                "name": "lory",
-            }).
             Desc("created_time").
+            Limit(10).
             Query()
 	if err != nil {
 		log.Errorf(err.Error())

@@ -20,6 +20,7 @@ const (
 	KeySort         = "$sort"
 	KeyLimit        = "$limit"
 	KeySum          = "$sum"
+	KeyAll          = "$all"
 )
 
 const (

@@ -221,6 +221,96 @@ func (e *Engine) Update() (rows int64, err error) {
 	return res.ModifiedCount, nil
 }
 
+// UpdateOne update one document
+func (e *Engine) UpdateOne() (rows int64, err error) {
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.UpdateOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.UpdateOptions))
+	}
+	e.makeUpdates()
+	e.debugJson("filter", e.filter, "updates", e.updates)
+	if len(e.filter) == 0 {
+		return 0, log.Errorf("filter is empty")
+	}
+	res, err := col.UpdateOne(ctx, e.filter, e.updates, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return res.ModifiedCount, nil
+}
+
+// FindOneUpdate find single document and update
+func (e *Engine) FindOneUpdate() (res *mongo.SingleResult, err error) {
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.FindOneAndUpdateOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.FindOneAndUpdateOptions))
+	}
+	e.makeUpdates()
+	e.debugJson("filter", e.filter, "updates", e.updates)
+	if len(e.filter) == 0 {
+		return nil, log.Errorf("filter is empty")
+	}
+	res = col.FindOneAndUpdate(ctx, e.filter, e.updates, opts...)
+	err = res.Err()
+	if err != nil {
+		return nil, log.Errorf(err.Error())
+	}
+	return res, nil
+}
+
+// FindOneReplace find single document and replace
+func (e *Engine) FindOneReplace() (res *mongo.SingleResult, err error) {
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.FindOneAndReplaceOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.FindOneAndReplaceOptions))
+	}
+	e.makeUpdates()
+	e.debugJson("filter", e.filter, "updates", e.updates)
+	if len(e.filter) == 0 {
+		return nil, log.Errorf("filter is empty")
+	}
+	res = col.FindOneAndReplace(ctx, e.filter, e.updates, opts...)
+	err = res.Err()
+	if err != nil {
+		return nil, log.Errorf(err.Error())
+	}
+	return res, nil
+}
+
+// FindOneDelete find single document and delete
+func (e *Engine) FindOneDelete() (res *mongo.SingleResult, err error) {
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.FindOneAndDeleteOptions
+	for _, opt := range e.options {
+		opts = append(opts, opt.(*options.FindOneAndDeleteOptions))
+	}
+	e.debugJson("filter", e.filter)
+	if len(e.filter) == 0 {
+		return nil, log.Errorf("filter is empty")
+	}
+	res = col.FindOneAndDelete(ctx, e.filter, opts...)
+	err = res.Err()
+	if err != nil {
+		return nil, log.Errorf(err.Error())
+	}
+	return res, nil
+}
+
 // Delete delete many records
 func (e *Engine) Delete() (rows int64, err error) {
 	defer e.clean()
@@ -561,68 +651,17 @@ func (e *Engine) Exists(strColumn string, value bool) *Engine {
 	return e
 }
 
+func (e *Engine) Array(strColumn string, value []interface{}) *Engine {
+	var v interface{}
+	v = ConvertValue(strColumn, value)
+	e.filter[strColumn] = v
+	return e
+}
+
 func (e *Engine) Page(pageNo, pageSize int) *Engine {
 	if pageSize != 0 {
 		e.limit = int64(pageSize)
 		e.skip = int64(pageSize * pageNo)
 	}
 	return e
-}
-
-func Sum(expr interface{}) bson.M {
-	return bson.M{
-		KeySum: expr,
-	}
-}
-
-func ToBool(expr interface{}) bson.M {
-	return bson.M{
-		toBool: expr,
-	}
-}
-
-func ToDecimal(expr interface{}) bson.M {
-	return bson.M{
-		toDecimal: expr,
-	}
-}
-func ToDouble(expr interface{}) bson.M {
-	return bson.M{
-		toDouble: expr,
-	}
-}
-func ToInt(expr interface{}) bson.M {
-	return bson.M{
-		toInt: expr,
-	}
-}
-func ToLong(expr interface{}) bson.M {
-	return bson.M{
-		toLong: expr,
-	}
-}
-func ToDate(expr interface{}) bson.M {
-	return bson.M{
-		toDate: expr,
-	}
-}
-func ToString(expr interface{}) bson.M {
-	return bson.M{
-		toString: expr,
-	}
-}
-func ToObjectId(expr interface{}) bson.M {
-	return bson.M{
-		toObjectId: expr,
-	}
-}
-func ToLower(expr interface{}) bson.M {
-	return bson.M{
-		toLower: expr,
-	}
-}
-func ToUpper(expr interface{}) bson.M {
-	return bson.M{
-		toUpper: expr,
-	}
 }
