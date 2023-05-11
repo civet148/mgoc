@@ -46,8 +46,13 @@ const (
 )
 
 const (
-	columnNameType        = "type"
-	columnNameCoordinates = "coordinates"
+	columnNameType          = "type"
+	columnNameCoordinates   = "coordinates"
+	columnNameNear          = "near"
+	columnNameDistanceField = "distanceField"
+	columnNameMaxDistance   = "maxDistance"
+	columnNameIncludeLocs   = "includeLocs"
+	columnNameSpherical     = "spherical"
 )
 
 const (

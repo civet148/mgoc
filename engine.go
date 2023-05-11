@@ -443,8 +443,12 @@ func (e *Engine) Except(strColumns ...string) *Engine {
 // Pipeline aggregate pipeline
 func (e *Engine) Pipeline(match, group bson.D, args ...bson.D) *Engine {
 	var pipeline = mongo.Pipeline{}
-	pipeline = append(pipeline, match)
-	pipeline = append(pipeline, group)
+	if match != nil {
+		pipeline = append(pipeline, match)
+	}
+	if group != nil {
+		pipeline = append(pipeline, group)
+	}
 	for _, v := range args {
 		if v != nil {
 			pipeline = append(pipeline, v)
@@ -523,6 +527,39 @@ func (e *Engine) Geometry(strColumn string, geometry *Geometry) *Engine {
 			KeyGeoMetry: geometry,
 		},
 	}
+	return e
+}
+
+// GeoNearByPoint query and return matched records with max distance in meters (just one index, 2d or 2dshpere)
+// column: the column which include location
+// pos: the position to query
+// maxDistance: the maximum distance nearby pos (meters)
+// disFieldName: distance column name to return
+func (e *Engine) GeoNearByPoint(column string, pos Coordinate, maxDistance int, disFieldName string) *Engine {
+	/*
+		db.restaurants.aggregate(
+		    {
+		        $geoNear:{
+		            "near":{type:"Point", coordinates:[-73.93414657, 40.82302903]},
+		            "distanceField":"distance",
+		            "maxDistance": 1000,
+		            "includeLocs": "location",
+		            "spherical": true,
+		      }
+		  }
+		)
+	*/
+	var point = NewGeoPoint(pos)
+	match := bson.D{
+		{KeyGeoNear, bson.M{
+			columnNameNear:          point,
+			columnNameDistanceField: disFieldName,
+			columnNameMaxDistance:   maxDistance,
+			columnNameIncludeLocs:   column,
+			columnNameSpherical:     true,
+		}},
+	}
+	e.Pipeline(match, nil)
 	return e
 }
 

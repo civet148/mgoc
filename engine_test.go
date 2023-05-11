@@ -39,7 +39,8 @@ type docRestaurant struct {
 		Type        string    `json:"type" bson:"type"`
 		Coordinates []float64 `json:"coordinates" bson:"coordinates"`
 	} `json:"location" bson:"location"`
-	Name string `json:"name" bson:"name"`
+	Name     string  `json:"name" bson:"name"`
+	Distance float64 `json:"distance" bson:"distance"`
 }
 
 type docNeighborhood struct {
@@ -76,7 +77,7 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	Insert(e)
+	//Insert(e)
 	Query(e)
 	GeoQuery(e)
 	Update(e)
@@ -86,11 +87,13 @@ func TestMongoDBCases(t *testing.T) {
 }
 
 func GeoQuery(e *Engine) {
+	const maxMeters = 1000 //meters
+	var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
 	//query restaurants near by distance 1000 meters
 	var restaurants []*docRestaurant
 	err := e.Model(&restaurants).
 		Table(TableNameRestaurants).
-		GeoCenterSphere("location", Coordinate{X: -73.93414657, Y: 40.82302903}, 1000).
+		GeoCenterSphere("location", pos, maxMeters).
 		Query()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -130,6 +133,19 @@ func GeoQuery(e *Engine) {
 	//	log.Debugf("neighborhood restaurant [%+v]", restaurant)
 	//}
 	log.Infof("neighborhood restaurants total [%d]", len(restaurants2))
+
+	var restaurants3 []*docRestaurant
+	err = e.Model(&restaurants3).
+		Table(TableNameRestaurants).
+		GeoNearByPoint("location",
+			pos,
+			maxMeters,
+			"distance").
+		Aggregate()
+	//for _, restaurant := range restaurants3 {
+	//	log.Debugf("geo near restaurant [%+v]", restaurant)
+	//}
+	log.Infof("geo near restaurants total [%d]", len(restaurants3))
 }
 
 func Query(e *Engine) {

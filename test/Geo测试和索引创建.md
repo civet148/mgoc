@@ -422,5 +422,27 @@ Type "it" for more
 > 
 ```
 
+## 4.3 查询距离
 
+根据某个点和最大距离搜索附近的数据并返回离当前点的距离
+
+- near 搜索起始点
+- distanceField 存放距离的参数(不能跟其他字段名冲突)
+- maxDistance 单位：米
+- includeLocs 包含位置信息的字段（建立2dsphere索引的字段）
+- spherical 是否使用球面几何计算
+
+```javascript
+db.restaurants.aggregate(
+    {
+        $geoNear:{
+            "near":{type:"Point", coordinates:[-73.93414657, 40.82302903]},
+            "distanceField":"distance",
+            "maxDistance": 1000,
+            "includeLocs": "location",
+            "spherical": true, 
+      }
+  }
+)
+```
 
