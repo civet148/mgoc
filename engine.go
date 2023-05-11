@@ -441,15 +441,9 @@ func (e *Engine) Except(strColumns ...string) *Engine {
 }
 
 // Pipeline aggregate pipeline
-func (e *Engine) Pipeline(match, group bson.D, args ...bson.D) *Engine {
+func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
 	var pipeline = mongo.Pipeline{}
-	if match != nil {
-		pipeline = append(pipeline, match)
-	}
-	if group != nil {
-		pipeline = append(pipeline, group)
-	}
-	for _, v := range args {
+	for _, v := range pipelines {
 		if v != nil {
 			pipeline = append(pipeline, v)
 		}
