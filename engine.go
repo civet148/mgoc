@@ -455,7 +455,6 @@ func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
 // Aggregate execute aggregate pipeline
 func (e *Engine) Aggregate() (err error) {
 	assert(e.models, "query model is nil")
-	assert(e.strTableName, "table name not set")
 	assert(e.pipeline, "pipeline is nil")
 
 	defer e.clean()
@@ -465,10 +464,14 @@ func (e *Engine) Aggregate() (err error) {
 	}
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
 	defer cancel()
-	col := e.Collection(e.strTableName)
-	e.debugJson("pipeline", e.pipeline)
 	var cur *mongo.Cursor
-	cur, err = col.Aggregate(ctx, e.pipeline, opts...)
+	e.debugJson("pipeline", e.pipeline)
+	if e.strTableName == "" {
+		cur, err = e.db.Aggregate(ctx, e.pipeline, opts...)
+	} else {
+		col := e.Collection(e.strTableName)
+		cur, err = col.Aggregate(ctx, e.pipeline, opts...)
+	}
 	if err != nil {
 		return log.Errorf(err.Error())
 	}
