@@ -24,9 +24,12 @@ const (
 	KeyNear          = "$near"
 	KeyGeoNear       = "$geoNear"
 	KeyGeoWithin     = "$geoWithin"
+	KeyCenter        = "$center"
+	KeyCenterSphere  = "$centerSphere"
 	KeyGeoIntersects = "$geoIntersects"
 	KeyNearSphere    = "$nearSphere"
 	KeyGeoMetry      = "$geometry"
+	KeyMaxDistance   = "$maxDistance"
 )
 
 const (
@@ -40,6 +43,11 @@ const (
 	toObjectId = "$toObjectId"
 	toLower    = "$toLower"
 	toUpper    = "$toUpper"
+)
+
+const (
+	columnNameType        = "type"
+	columnNameCoordinates = "coordinates"
 )
 
 const (

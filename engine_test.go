@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	TableNameStudentInfo = "student_info"
-	TableNameRestaurant  = "restaurant"
+	TableNameStudentInfo   = "student_info"
+	TableNameRestaurants   = "restaurants"
+	TableNameNeighborhoods = "neighborhoods"
 )
 
 type extraData struct {
@@ -33,6 +34,18 @@ type docStudent struct {
 }
 
 type docRestaurant struct {
+	Id       string `json:"_id" bson:"_id,omitempty"`
+	Location struct {
+		Type        string    `json:"type" bson:"type"`
+		Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+	} `json:"location" bson:"location"`
+	Name string `json:"name" bson:"name"`
+}
+
+type docNeighborhood struct {
+	Id       string   `json:"_id" bson:"_id,omitempty"`
+	Geometry Geometry `json:"geometry" bson:"geometry"`
+	Name     string   `json:"name" bson:"name"`
 }
 
 const (
@@ -68,12 +81,55 @@ func TestMongoDBCases(t *testing.T) {
 	GeoQuery(e)
 	Update(e)
 	Count(e)
-	Delete(e)
+	//Delete(e)
 	Aggregate(e)
 }
 
 func GeoQuery(e *Engine) {
-
+	//query restaurants near by distance 1000 meters
+	var restaurants []*docRestaurant
+	err := e.Model(&restaurants).
+		Table(TableNameRestaurants).
+		GeoCenterSphere("location", Coordinate{X: -73.93414657, Y: 40.82302903}, 1000).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	//for _, restaurant := range restaurants {
+	//	log.Debugf("center restaurant [%+v]", restaurant)
+	//}
+	log.Infof("center restaurants total [%d]", len(restaurants))
+	var neighbor *docNeighborhood
+	err = e.Model(&neighbor).
+		Table(TableNameNeighborhoods).
+		Filter(bson.M{
+			"geometry": bson.M{
+				KeyGeoIntersects: bson.M{
+					KeyGeoMetry: NewGeoMetry(GeoTypePoint, FloatArray{-73.93414657, 40.82302903}),
+				},
+			},
+		}).
+		Limit(1).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("neighborhood [%+v]", neighbor)
+	var restaurants2 []*docRestaurant
+	err = e.Model(&restaurants2).
+		Table(TableNameRestaurants).
+		Geometry("location", &neighbor.Geometry).
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	//for _, restaurant := range restaurants2 {
+	//	log.Debugf("neighborhood restaurant [%+v]", restaurant)
+	//}
+	log.Infof("neighborhood restaurants total [%d]", len(restaurants2))
 }
 
 func Query(e *Engine) {

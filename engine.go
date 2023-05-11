@@ -501,6 +501,31 @@ func (e *Engine) Filter(filter bson.M) *Engine {
 	return e
 }
 
+// GeoCenterSphere query by coordinate and distance in meters (sphere)
+func (e *Engine) GeoCenterSphere(strColumn string, pos Coordinate, distance int) *Engine {
+	var rad = Radian(uint64(distance))
+	center := []interface{}{
+		FloatArray{pos.X, pos.Y},
+		rad,
+	}
+	e.filter[strColumn] = bson.M{
+		KeyGeoWithin: bson.M{
+			KeyCenterSphere: center,
+		},
+	}
+	return e
+}
+
+// Geometry query by geometry
+func (e *Engine) Geometry(strColumn string, geometry *Geometry) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyGeoWithin: bson.M{
+			KeyGeoMetry: geometry,
+		},
+	}
+	return e
+}
+
 // Set update columns specified
 func (e *Engine) Set(strColumn string, value interface{}) *Engine {
 	if strColumn == e.PrimaryKey() {

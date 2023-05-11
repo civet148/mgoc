@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	radianBase          = float64(6359.0)
 	OfficalObjectIdSize = 24
 	MgoV2ObjectIdSize   = 48
 )
@@ -97,43 +98,142 @@ func ToDecimal(expr interface{}) bson.M {
 		toDecimal: expr,
 	}
 }
+
 func ToDouble(expr interface{}) bson.M {
 	return bson.M{
 		toDouble: expr,
 	}
 }
+
 func ToInt(expr interface{}) bson.M {
 	return bson.M{
 		toInt: expr,
 	}
 }
+
 func ToLong(expr interface{}) bson.M {
 	return bson.M{
 		toLong: expr,
 	}
 }
+
 func ToDate(expr interface{}) bson.M {
 	return bson.M{
 		toDate: expr,
 	}
 }
+
 func ToString(expr interface{}) bson.M {
 	return bson.M{
 		toString: expr,
 	}
 }
+
 func ToObjectId(expr interface{}) bson.M {
 	return bson.M{
 		toObjectId: expr,
 	}
 }
+
 func ToLower(expr interface{}) bson.M {
 	return bson.M{
 		toLower: expr,
 	}
 }
+
 func ToUpper(expr interface{}) bson.M {
 	return bson.M{
 		toUpper: expr,
+	}
+}
+
+//计算弧度
+func Radian(meters uint64) float64 {
+	r := float64(meters) / 1000
+	return r / radianBase
+}
+
+func NewGeoPoint(coord Coordinate) *GeoPoint {
+	return &GeoPoint{
+		Type:        GeoTypePoint,
+		Coordinates: []float64{coord.X, coord.Y},
+	}
+}
+
+func NewGeoMultiPoint(coords []Coordinate) *GeoMultiPoint {
+	var coordinates FloatArray2
+	for _, coord := range coords {
+		coordinates = append(coordinates, FloatArray{coord.X, coord.Y})
+	}
+	return &GeoMultiPoint{
+		Type:        GeoTypeMultiPoint,
+		Coordinates: coordinates,
+	}
+}
+
+func NewGeoLineString(coords []Coordinate) *GeoLineString {
+	var coordinates FloatArray2
+	for _, coord := range coords {
+		coordinates = append(coordinates, FloatArray{coord.X, coord.Y})
+	}
+	return &GeoLineString{
+		Type:        GeoTypeLineString,
+		Coordinates: coordinates,
+	}
+}
+
+func NewGeoMultiLineString(coords [][]Coordinate) *GeoMultiLineString {
+	var coordinates FloatArray3
+	for _, coord := range coords {
+		var cs FloatArray2
+		for _, v := range coord {
+			cs = append(cs, FloatArray{v.X, v.Y})
+		}
+		coordinates = append(coordinates, cs)
+	}
+	return &GeoMultiLineString{
+		Type:        GeoTypeMultiLineString,
+		Coordinates: coordinates,
+	}
+}
+
+func NewGeoPolygon(coords [][]Coordinate) *GeoPolygon {
+	var coordinates FloatArray3
+	for _, coord := range coords {
+		var cs FloatArray2
+		for _, v := range coord {
+			cs = append(cs, FloatArray{v.X, v.Y})
+		}
+		coordinates = append(coordinates, cs)
+	}
+	return &GeoPolygon{
+		Type:        GeoTypePolygon,
+		Coordinates: coordinates,
+	}
+}
+
+func NewGeoMultiPolygon(coords [][][]Coordinate) *GeoMultiPolygon {
+	var coordinates FloatArray4
+	for _, coord := range coords {
+		var cs FloatArray3
+		for _, v := range coord {
+			var cs2 FloatArray2
+			for _, v2 := range v {
+				cs2 = append(cs2, FloatArray{v2.X, v2.Y})
+			}
+			cs = append(cs, cs2)
+		}
+		coordinates = append(coordinates, cs)
+	}
+	return &GeoMultiPolygon{
+		Type:        GeoTypeMultiPolygon,
+		Coordinates: coordinates,
+	}
+}
+
+func NewGeoMetry(typ GeoType, coordinates interface{}) *Geometry {
+	return &Geometry{
+		Type:        typ,
+		Coordinates: coordinates,
 	}
 }
