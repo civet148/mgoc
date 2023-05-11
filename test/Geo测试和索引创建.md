@@ -383,42 +383,43 @@ Type "it" for more
 
 ## 4.2 给定坐标查询附近餐馆
 
-- 查询5000米范围内所有的餐馆
+- 查询1000米范围内所有的餐馆
+
+弧度计算公式：(radius/1000)/6359.0 = (1000/1000)/6359.0 = 1/6359.0 
 
 ```sh
+# 查询附近1000米内所有的餐馆总数
 > db.restaurants.find(
 { 
 location: { 
-$nearSphere: { 
-	$geometry: { 
-		type: "Point", 
-		coordinates: [ -73.93414657, 40.82302903 ] }, 
-		$maxDistance: 5000 
+$geoWithin: { 
+			$centerSphere: [[ -73.93414657, 40.82302903 ], 1/6359.0]
+		} 
+	}
+}).count()
+172
+
+# 查询附近1000米内所有的餐馆数据
+> db.restaurants.find(
+{ 
+location: { 
+$geoWithin: { 
+			$centerSphere: [[ -73.93414657, 40.82302903 ], 1/6359.0]
 		} 
 	}
 })
 
-{ "_id" : ObjectId("55cba2476c522cafdb058c83"), "location" : { "coordinates" : [ -73.9316894, 40.8231974 ], "type" : "Point" }, "name" : "Gotham Stadium Tennis Center Cafe" }
-{ "_id" : ObjectId("55cba2476c522cafdb05864b"), "location" : { "coordinates" : [ -73.9378967, 40.823448 ], "type" : "Point" }, "name" : "Tia Melli'S Latin Kitchen" }
-{ "_id" : ObjectId("55cba2476c522cafdb058c63"), "location" : { "coordinates" : [ -73.9303724, 40.8234978 ], "type" : "Point" }, "name" : "Chuck E. Cheese'S" }
-{ "_id" : ObjectId("55cba2476c522cafdb0550aa"), "location" : { "coordinates" : [ -73.93795159999999, 40.823376 ], "type" : "Point" }, "name" : "Domino'S Pizza" }
-{ "_id" : ObjectId("55cba2476c522cafdb0548e0"), "location" : { "coordinates" : [ -73.9381738, 40.8224212 ], "type" : "Point" }, "name" : "Red Star Chinese Restaurant" }
-{ "_id" : ObjectId("55cba2476c522cafdb056b6a"), "location" : { "coordinates" : [ -73.93011659999999, 40.8219403 ], "type" : "Point" }, "name" : "Applebee'S Neighborhood Grill & Bar" }
-{ "_id" : ObjectId("55cba2476c522cafdb0578b3"), "location" : { "coordinates" : [ -73.93011659999999, 40.8219403 ], "type" : "Point" }, "name" : "Marisco Centro Seafood Restaurant  & Bar" }
-{ "_id" : ObjectId("55cba2476c522cafdb058dfc"), "location" : { "coordinates" : [ -73.9370572, 40.8206095 ], "type" : "Point" }, "name" : "108 Fast Food Corp" }
-{ "_id" : ObjectId("55cba2476c522cafdb0574cd"), "location" : { "coordinates" : [ -73.9365102, 40.8202205 ], "type" : "Point" }, "name" : "Kentucky Fried Chicken" }
-{ "_id" : ObjectId("55cba2476c522cafdb057d52"), "location" : { "coordinates" : [ -73.9385009, 40.8222455 ], "type" : "Point" }, "name" : "United Fried Chicken" }
-{ "_id" : ObjectId("55cba2476c522cafdb054e83"), "location" : { "coordinates" : [ -73.9373291, 40.8206458 ], "type" : "Point" }, "name" : "Dunkin Donuts" }
-{ "_id" : ObjectId("55cba2476c522cafdb05615f"), "location" : { "coordinates" : [ -73.9373291, 40.8206458 ], "type" : "Point" }, "name" : "King'S Pizza" }
-{ "_id" : ObjectId("55cba2476c522cafdb05476a"), "location" : { "coordinates" : [ -73.9365637, 40.8201488 ], "type" : "Point" }, "name" : "Papa John'S" }
-{ "_id" : ObjectId("55cba2486c522cafdb059a11"), "location" : { "coordinates" : [ -73.9365637, 40.8201488 ], "type" : "Point" }, "name" : "Jimbo'S Hamburgers" }
-{ "_id" : ObjectId("55cba2476c522cafdb0580a7"), "location" : { "coordinates" : [ -73.938599, 40.82211110000001 ], "type" : "Point" }, "name" : "Home Garden Chinese Restaurant" }
-{ "_id" : ObjectId("55cba2476c522cafdb05814c"), "location" : { "coordinates" : [ -73.9367511, 40.8198978 ], "type" : "Point" }, "name" : "Sweet Mama'S Soul Food" }
-{ "_id" : ObjectId("55cba2476c522cafdb056b96"), "location" : { "coordinates" : [ -73.9308109, 40.82594580000001 ], "type" : "Point" }, "name" : "Dunkin Donuts (Inside Gulf Gas Station On North Side Of Maj. Deegan Exwy- After Exit 13 - 233 St.)" }
-{ "_id" : ObjectId("55cba2476c522cafdb056ffd"), "location" : { "coordinates" : [ -73.939159, 40.8216897 ], "type" : "Point" }, "name" : "Reggae Sun Delights Natural Juice Bar" }
-{ "_id" : ObjectId("55cba2476c522cafdb056b0c"), "location" : { "coordinates" : [ -73.939145, 40.8213757 ], "type" : "Point" }, "name" : "Ho Lee Chinese Restaurant" }
-{ "_id" : ObjectId("55cba2486c522cafdb059617"), "location" : { "coordinates" : [ -73.9396354, 40.8220958 ], "type" : "Point" }, "name" : "Ivory D O S  Inc" }
+{ "_id" : ObjectId("55cba2476c522cafdb056005"), "location" : { "coordinates" : [ -73.9259201, 40.8278293 ], "type" : "Point" }, "name" : "Nyy Steak" }
+{ "_id" : ObjectId("55cba2476c522cafdb056004"), "location" : { "coordinates" : [ -73.9259201, 40.8278293 ], "type" : "Point" }, "name" : "Hard Rock Cafe" }
+{ "_id" : ObjectId("55cba2476c522cafdb058ae9"), "location" : { "coordinates" : [ -73.9259245, 40.827435 ], "type" : "Point" }, "name" : "Dunkin Donuts" }
+{ "_id" : ObjectId("55cba2476c522cafdb0543cb"), "location" : { "coordinates" : [ -73.92594439999999, 40.8272129 ], "type" : "Point" }, "name" : "Billy'S Sport Bar Restaurant & Lounge" }
+{ "_id" : ObjectId("55cba2476c522cafdb056784"), "location" : { "coordinates" : [ -73.9262845, 40.82669569999999 ], "type" : "Point" }, "name" : "Stan'S Sports Bar" }
+{ "_id" : ObjectId("55cba2476c522cafdb056eb6"), "location" : { "coordinates" : [ -73.9259928, 40.82713630000001 ], "type" : "Point" }, "name" : "Yankee Bar & Grill" }
+{ "_id" : ObjectId("55cba2476c522cafdb057b8a"), "location" : { "coordinates" : [ -73.9250339, 40.8269856 ], "type" : "Point" }, "name" : "Flavas International Grill" }
+{ "_id" : ObjectId("55cba2476c522cafdb05553c"), "location" : { "coordinates" : [ -73.9244796, 40.8270316 ], "type" : "Point" }, "name" : "Court Deli Restaurant" }
+{ "_id" : ObjectId("55cba2476c522cafdb0581c2"), "location" : { "coordinates" : [ -73.9249324, 40.8274822 ], "type" : "Point" }, "name" : "Us Fried Chicken" }
 Type "it" for more
+> 
 ```
 
 
