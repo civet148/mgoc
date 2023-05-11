@@ -73,14 +73,6 @@ $ mongo
         "numIndexesAfter" : 2,
         "ok" : 1
 }
-# 为restaurants表location.coordinates字段创建2D索引
-> db.restaurants.createIndex({"location.coordinates":"2d"})
-{
-        "createdCollectionAutomatically" : false,
-        "numIndexesBefore" : 2,
-        "numIndexesAfter" : 3,
-        "ok" : 1
-}
 # 为neighborhoods表geometry字段建立2D球面索引
 > db.neighborhoods.createIndex({ geometry: "2dsphere" })
 {
