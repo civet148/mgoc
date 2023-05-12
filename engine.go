@@ -528,11 +528,12 @@ func (e *Engine) Geometry(strColumn string, geometry *Geometry) *Engine {
 }
 
 // GeoNearByPoint query and return matched records with max distance in meters (just one index, 2d or 2dshpere)
-// column: the column which include location
+// strColumn: the column which include location
 // pos: the position to query
 // maxDistance: the maximum distance nearby pos (meters)
+// includeLocs: the column name which include location
 // disFieldName: distance column name to return
-func (e *Engine) GeoNearByPoint(column string, pos Coordinate, maxDistance int, disFieldName string) *Engine {
+func (e *Engine) GeoNearByPoint(strColumn string, pos Coordinate, maxDistance int, disFieldName string) *Engine {
 	/*
 		db.restaurants.aggregate(
 		    {
@@ -552,7 +553,7 @@ func (e *Engine) GeoNearByPoint(column string, pos Coordinate, maxDistance int, 
 			columnNameNear:          point,
 			columnNameDistanceField: disFieldName,
 			columnNameMaxDistance:   maxDistance,
-			columnNameIncludeLocs:   column,
+			columnNameIncludeLocs:   strColumn,
 			columnNameSpherical:     true,
 		}},
 	}
