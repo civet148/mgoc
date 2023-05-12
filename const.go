@@ -13,6 +13,7 @@ const (
 	KeyExists        = "$exists"
 	KeyRegex         = "$regex"
 	KeySet           = "$set"
+	KeyElemMatch     = "$elemMatch"
 	KeyMatch         = "$match"
 	KeyGroup         = "$group"
 	KeyHaving        = "$having"

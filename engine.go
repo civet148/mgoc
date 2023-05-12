@@ -578,6 +578,13 @@ func (e *Engine) Set(strColumn string, value interface{}) *Engine {
 	return e
 }
 
+func (e *Engine) ElemMatch(strColumn string, value interface{}) *Engine {
+	e.filter[strColumn] = bson.M{
+		KeyElemMatch: value,
+	}
+	return e
+}
+
 func (e *Engine) In(strColumn string, value interface{}) *Engine {
 	e.filter[strColumn] = bson.M{
 		KeyIn: value,
