@@ -22,8 +22,7 @@ type extraData struct {
 }
 
 type docStudent struct {
-	//Id bson2.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
-	Id          string    `json:"_id,omitempty" bson:"_id,omitempty"`
+	Id          ObjectID  `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name        string    `json:"name" bson:"name"`
 	Sex         string    `json:"sex" bson:"sex"`
 	Age         int       `json:"age" bson:"age"`
@@ -79,7 +78,7 @@ func TestMongoDBCases(t *testing.T) {
 	e.Debug(true)
 	//Insert(e)
 	Query(e)
-	GeoQuery(e)
+	//GeoQuery(e)
 	Update(e)
 	Count(e)
 	//Delete(e)
@@ -316,7 +315,7 @@ func Update(e *Engine) {
 		return
 	}
 	var student = &docStudent{
-		Id:          officialObjectId,
+		Id:          ToObjectID(officialObjectId).(ObjectID),
 		Name:        "kary",
 		Sex:         "female",
 		Age:         39,

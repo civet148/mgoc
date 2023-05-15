@@ -15,14 +15,14 @@ const (
 
 func ConvertValue(column string, value interface{}) (v interface{}) {
 	if column == defaultPrimaryKeyName {
-		v = ObjectID(value)
+		v = ToObjectID(value)
 	} else {
 		v = value
 	}
 	return v
 }
 
-func ObjectID(v interface{}) (id interface{}) {
+func ToObjectID(v interface{}) (id interface{}) {
 	//log.Debugf("value type [%v]", reflect.TypeOf(v))
 	switch v.(type) {
 	case string:
@@ -53,7 +53,7 @@ func Str2ObjectID(strId string) (id interface{}) {
 	if len(strId) == 0 {
 		return nil
 	}
-	if len(strId) == OfficalObjectIdSize { //mongo-driver ObjectID
+	if len(strId) == OfficalObjectIdSize { //mongo-driver ToObjectID
 		oid, err := primitive.ObjectIDFromHex(strId)
 		if err != nil {
 			return strId

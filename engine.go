@@ -424,7 +424,7 @@ func (e *Engine) Limit(n int) *Engine {
 }
 
 func (e *Engine) Id(v interface{}) *Engine {
-	e.filter[defaultPrimaryKeyName] = ObjectID(v)
+	e.filter[defaultPrimaryKeyName] = ToObjectID(v)
 	return e
 }
 
@@ -611,7 +611,7 @@ func (e *Engine) Equal(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) EQ(strColumn string, value interface{}) *Engine {
+func (e *Engine) Eq(strColumn string, value interface{}) *Engine {
 	return e.Equal(strColumn, value)
 }
 

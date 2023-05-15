@@ -1,5 +1,9 @@
 package mgoc
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
+type ObjectID = primitive.ObjectID
+
 type GeoType string
 
 const (

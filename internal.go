@@ -456,7 +456,7 @@ func (e *Engine) replaceInsertModels() {
 						continue
 					}
 					if tagVal == defaultPrimaryKeyName {
-						id := ObjectID(valField.Interface())
+						id := ToObjectID(valField.Interface())
 						if id != nil {
 							mm[tagVal] = id
 						}
