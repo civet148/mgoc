@@ -611,7 +611,11 @@ func (e *Engine) Equal(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) NotEqual(strColumn string, value interface{}) *Engine {
+func (e *Engine) EQ(strColumn string, value interface{}) *Engine {
+	return e.Equal(strColumn, value)
+}
+
+func (e *Engine) notEqual(strColumn string, value interface{}) *Engine {
 	var v interface{}
 	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
@@ -620,7 +624,11 @@ func (e *Engine) NotEqual(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) GreaterThan(strColumn string, value interface{}) *Engine {
+func (e *Engine) Ne(strColumn string, value interface{}) *Engine {
+	return e.notEqual(strColumn, value)
+}
+
+func (e *Engine) greaterThan(strColumn string, value interface{}) *Engine {
 	var v interface{}
 	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
@@ -629,16 +637,24 @@ func (e *Engine) GreaterThan(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) GreaterEqual(strColumn string, value interface{}) *Engine {
+func (e *Engine) Gt(strColumn string, value interface{}) *Engine {
+	return e.greaterThan(strColumn, value)
+}
+
+func (e *Engine) greaterThanEqual(strColumn string, value interface{}) *Engine {
 	var v interface{}
 	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: v,
+		KeyGreaterThanEqual: v,
 	}
 	return e
 }
 
-func (e *Engine) LessThan(strColumn string, value interface{}) *Engine {
+func (e *Engine) Gte(strColumn string, value interface{}) *Engine {
+	return e.greaterThanEqual(strColumn, value)
+}
+
+func (e *Engine) lessThan(strColumn string, value interface{}) *Engine {
 	var v interface{}
 	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
@@ -647,16 +663,24 @@ func (e *Engine) LessThan(strColumn string, value interface{}) *Engine {
 	return e
 }
 
-func (e *Engine) LessEqual(strColumn string, value interface{}) *Engine {
+func (e *Engine) Lt(strColumn string, value interface{}) *Engine {
+	return e.lessThan(strColumn, value)
+}
+
+func (e *Engine) lessThanEqual(strColumn string, value interface{}) *Engine {
 	var v interface{}
 	v = ConvertValue(strColumn, value)
 	e.filter[strColumn] = bson.M{
-		KeyLessEqual: v,
+		KeyLessThanEqual: v,
 	}
 	return e
 }
 
-func (e *Engine) GreaterLessThan(strColumn string, value1, value2 interface{}) *Engine {
+func (e *Engine) Lte(strColumn string, value interface{}) *Engine {
+	return e.lessThanEqual(strColumn, value)
+}
+
+func (e *Engine) greaterThanLessThan(strColumn string, value1, value2 interface{}) *Engine {
 	var v1, v2 interface{}
 	v1 = ConvertValue(strColumn, value1)
 	v2 = ConvertValue(strColumn, value2)
@@ -667,37 +691,53 @@ func (e *Engine) GreaterLessThan(strColumn string, value1, value2 interface{}) *
 	return e
 }
 
-func (e *Engine) GreaterLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+func (e *Engine) GtLt(strColumn string, value1, value2 interface{}) *Engine {
+	return e.greaterThanLessThan(strColumn, value1, value2)
+}
+
+func (e *Engine) greaterEqualLessEqual(strColumn string, value1, value2 interface{}) *Engine {
 	var v1, v2 interface{}
 	v1 = ConvertValue(strColumn, value1)
 	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: v1,
-		KeyLessEqual:    v2,
+		KeyGreaterThanEqual: v1,
+		KeyLessThanEqual:    v2,
 	}
 	return e
 }
 
-func (e *Engine) GreaterThanLessEqual(strColumn string, value1, value2 interface{}) *Engine {
+func (e *Engine) GteLte(strColumn string, value1, value2 interface{}) *Engine {
+	return e.greaterEqualLessEqual(strColumn, value1, value2)
+}
+
+func (e *Engine) greaterThanLessEqual(strColumn string, value1, value2 interface{}) *Engine {
 	var v1, v2 interface{}
 	v1 = ConvertValue(strColumn, value1)
 	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterThan: v1,
-		KeyLessEqual:   v2,
+		KeyGreaterThan:   v1,
+		KeyLessThanEqual: v2,
 	}
 	return e
 }
 
-func (e *Engine) GreaterEqualLessThan(strColumn string, value1, value2 interface{}) *Engine {
+func (e *Engine) GtLte(strColumn string, value1, value2 interface{}) *Engine {
+	return e.greaterThanLessEqual(strColumn, value1, value2)
+}
+
+func (e *Engine) greaterEqualLessThan(strColumn string, value1, value2 interface{}) *Engine {
 	var v1, v2 interface{}
 	v1 = ConvertValue(strColumn, value1)
 	v2 = ConvertValue(strColumn, value2)
 	e.filter[strColumn] = bson.M{
-		KeyGreaterEqual: v1,
-		KeyLessThan:     v2,
+		KeyGreaterThanEqual: v1,
+		KeyLessThan:         v2,
 	}
 	return e
+}
+
+func (e *Engine) GteLt(strColumn string, value1, value2 interface{}) *Engine {
+	return e.greaterEqualLessThan(strColumn, value1, value2)
 }
 
 func (e *Engine) Regex(strColumn string, value interface{}) *Engine {
