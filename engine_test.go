@@ -228,6 +228,7 @@ func Count(e *Engine) {
 
 func Insert(e *Engine) {
 	var student = &docStudent{
+		Id:          NewObjectID(),
 		Name:        "john1",
 		Sex:         "male",
 		Age:         3,
@@ -242,7 +243,7 @@ func Insert(e *Engine) {
 	}
 	var students = []*docStudent{
 		{
-			//Id:          bson2.NewObjectId(),
+			//Id:        NewObjectID(), //auto generated
 			Name:        "lory2",
 			Sex:         "male",
 			Age:         18,
@@ -255,7 +256,7 @@ func Insert(e *Engine) {
 			},
 		},
 		{
-			//Id:          bson2.NewObjectId(),
+			//Id:        NewObjectID(), //auto generated
 			Name:        "katy3",
 			Sex:         "female",
 			Age:         28,

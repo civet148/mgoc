@@ -13,6 +13,10 @@ const (
 	MgoV2ObjectIdSize   = 48
 )
 
+func NewObjectID() ObjectID {
+	return primitive.NewObjectID()
+}
+
 func ConvertValue(column string, value interface{}) (v interface{}) {
 	if column == defaultPrimaryKeyName {
 		v = ToObjectID(value)
