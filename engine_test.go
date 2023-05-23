@@ -76,12 +76,12 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	//Insert(e)
+	Insert(e)
 	Query(e)
-	//GeoQuery(e)
+	GeoQuery(e)
 	Update(e)
 	Count(e)
-	//Delete(e)
+	Delete(e)
 	Aggregate(e)
 }
 
@@ -268,7 +268,7 @@ func Insert(e *Engine) {
 			},
 		},
 	}
-	ids, err := e.Model(student).
+	ids, err := e.Model(&student).
 		Table(TableNameStudentInfo).
 		Options(&options.InsertOneOptions{}).
 		Insert()
@@ -277,7 +277,7 @@ func Insert(e *Engine) {
 		return
 	}
 	log.Infof("[Single] insert ids %+v", ids)
-	ids, err = e.Model(students).
+	ids, err = e.Model(&students).
 		Options(&options.InsertManyOptions{}).
 		Table(TableNameStudentInfo).
 		Insert()
