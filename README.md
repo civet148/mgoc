@@ -345,7 +345,7 @@ for _, student := range students {
 
 ## 更新操作
 
-- 通过数据模型更新字段
+- **通过数据模型更新字段**
 
 UPDATE student_info SET name='kary', sex='female', age=39, balance='123.456', created_time=NOW() WHERE _id='6438f32fd71fc42e601558aa'
 
@@ -370,7 +370,7 @@ if err != nil {
 }
 ```
 
-- 通过Set方式更新字段
+- **通过Set方式更新字段**
 
 ```go
 _, err := e.Model().
@@ -380,6 +380,63 @@ _, err := e.Model().
             Set("name", "mason").
             Set("sex", "male").
             Set("balance", mgoc.NewDecimal("123.456")).
+            Update()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+```
+
+- **结构嵌套更新**
+
+```go
+type ExtraData struct {
+	IdCard      string   `bson:"id_card"`
+    Address     string   `bson:"address"`
+}
+
+type Student struct {
+	Id          string    `bson:"_id,omitempty"`
+	Name        string    `bson:"name"`
+	Sex         string    `bson:"sex"`
+	Age         int       `bson:"age"`
+	ClassNo     string    `bson:"class_no"`
+	CreatedTime time.Time `bson:"created_time"`
+    ExtraData   ExtraData `bson:"extra_data"`
+}
+oid, err := NewObjectIDFromString("6438f32fd71fc42e601558aa")
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+var student = &Student{
+		Id:          oid,
+         ClassNo:     "CLASS-3",
+         ExtraData:   ExtraData {
+             IdCard: "6553239109322",
+             Sports: ["football"]
+         },
+	}
+// UPDATE student_info 
+// SET class_no='CLASS-3', extra_data.id_card='6553239109322'
+// WHERE _id='6438f32fd71fc42e601558aa'
+_, err = e.Model(&student).
+            Table("student_info").
+            Options(&options.UpdateOptions{}).
+            Select("class_no", "extra_data.id_card").
+            Update()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+
+//等同于下面的方式
+_, err = e.Model().
+            Table("student_info").
+            Id("6438f32fd71fc42e601558aa")
+            Options(&options.UpdateOptions{}).
+            Set("class_no", "CLASS-3").
+            Set("extra_data.id_card", "6553239109322").
             Update()
 if err != nil {
     log.Errorf(err.Error())
