@@ -391,17 +391,17 @@ if err != nil {
 
 ```go
 type ExtraData struct {
-	IdCard      string   `bson:"id_card"`
+    IdCard      string   `bson:"id_card"`
     Address     string   `bson:"address"`
 }
 
 type Student struct {
-	Id          string    `bson:"_id,omitempty"`
-	Name        string    `bson:"name"`
-	Sex         string    `bson:"sex"`
-	Age         int       `bson:"age"`
-	ClassNo     string    `bson:"class_no"`
-	CreatedTime time.Time `bson:"created_time"`
+    Id          string    `bson:"_id,omitempty"`
+    Name        string    `bson:"name"`
+    Sex         string    `bson:"sex"`
+    Age         int       `bson:"age"`
+    ClassNo     string    `bson:"class_no"`
+    CreatedTime time.Time `bson:"created_time"`
     ExtraData   ExtraData `bson:"extra_data"`
 }
 oid, err := NewObjectIDFromString("6438f32fd71fc42e601558aa")
@@ -414,7 +414,6 @@ var student = &Student{
          ClassNo:     "CLASS-3",
          ExtraData:   ExtraData {
              IdCard: "6553239109322",
-             Sports: ["football"]
          },
 	}
 // UPDATE student_info 
