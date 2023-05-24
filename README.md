@@ -160,16 +160,17 @@ func main() {
 ```
 
 ## 选项
-- Options方法 
+- Options方法 [optional]
+
   根据实际操作类型不同可输入不同的Option类型，比如查询时选填options.FindOptions，更新时可选填options.UpdateOptions
-  插入单条记录时可选填options.InsertOneOptions，插入多条则是options.InsertManyOptions等等
+  插入单条记录时可选填options.InsertOneOptions，插入多条则是options.InsertManyOptions等等(选填)
 
 ## 插入操作
 
 - 单条插入
 
 ```go
-var student = &docStudent{
+var student = Student{
 		Name:        "john",
 		Sex:         "male",
 		Age:         13,
@@ -177,7 +178,7 @@ var student = &docStudent{
 		Balance:     mgoc.NewDecimal("532.324"),
 		CreatedTime: time.Now(),
 	}
-ids, err := e.Model(student).
+ids, err := e.Model(&student).
 		Table("student_info").
 		Options(&options.InsertOneOptions{}).
 		Insert()
@@ -185,13 +186,13 @@ if err != nil {
     log.Errorf(err.Error())
     return
 }
-log.Infof("[Single] insert ids %+v", ids)
+log.Infof("[Single] insert id %+v", ids)
 ```
 
 - 多条插入(非事务)
 
 ```go
-var students = []*docStudent{
+var students = []*Student{
 		{
 			Name:        "lory",
 			Sex:         "male",
@@ -207,7 +208,7 @@ var students = []*docStudent{
 			CreatedTime: time.Now(),
 		},
 	}
-ids, err = e.Model(students).
+ids, err := e.Model(&students).
 		Options(&options.InsertManyOptions{}).
 		Table("student_info").
 		Insert()
@@ -220,13 +221,345 @@ log.Infof("[Many] insert ids %+v", ids)
 
 
 
-## 普通查询
+## 查询操作
+
+- 单条查询
+
+SELECT *  FROM student_info LIMIT 1
+
+```go
+var err error
+var student *Student
+err = e.Model(&student).
+        Table("student_info").
+        Limit(1).
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("single student %+v", student)
+```
+
+- 多条查询
+
+SELECT _id, name, age, sex FROM student_info LIMIT 10
+
+```go
+var err error
+var students []*Student
+err = e.Model(&students).
+        Table("student_info").
+        Select("_id", "name", "age", "sex").
+        Options(&options.FindOptions{}).
+        Desc("created_time").
+        Limit(10).
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+for _, student := range students {
+    log.Infof("student %+v", student)
+}
+```
+
+- 分页查询
+
+SELECT _id, name, age, sex FROM student_info LIMIT 0,10
+
+```go
+var students []*Student
+total, err := e.Model(&students).
+        Table("student_info").
+        Select("_id", "name", "age", "sex").
+        Options(&options.FindOptions{}).
+        Desc("created_time").
+        Page(0, 10). //Page(2, 10) == LIMIT 2*10, 10
+        QueryEx()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("student total %+v", total)
+for _, student := range students {
+    log.Infof("student %+v", student)
+}
+```
+
+- 条件查询
+
+SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16
+
+```go
+var err error
+var students []*Student
+err = e.Model(&students).
+        Table("student_info").
+        Select("_id", "name", "age", "sex").
+        Options(&options.FindOptions{}).
+        Eq("class_no", "CLASS-2").
+        Gte("age", 11).
+        Lte("age", 16).
+        Desc("created_time").
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+for _, student := range students {
+    log.Infof("student %+v", student)
+}
+```
+
+
+
+- 自定义查询
+
+SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16
+
+```go
+var err error
+var students []*Student
+err = e.Model(&students).
+        Table("student_info").
+        Select("_id", "name", "age", "sex").
+        Options(&options.FindOptions{}).
+        Filter(bson.M{
+            "class_no":"CLASS-2",
+            "age": bson.M{"$gte":11},
+            "age": bson.M{"$lte":16},
+        })
+        Desc("created_time").
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+for _, student := range students {
+    log.Infof("student %+v", student)
+}
+```
+
+
 
 ## 更新操作
 
+UPDATE student_info SET name='kary', sex='female', age=39, balance='123.456', created_time=NOW() WHERE _id='6438f32fd71fc42e601558aa'
+
+```go
+// 更新Id值6438f32fd71fc42e601558aa对应的数据记录
+var student = &Student{
+		Id:          mgoc.ToObjectID("6438f32fd71fc42e601558aa").(mgoc.ObjectID),
+		Name:        "kary",
+		Sex:         "female",
+		Age:         39,
+		Balance:     mgoc.NewDecimal("123.456"),
+		CreatedTime: time.Now(),
+	}
+_, err = e.Model(&student).
+            Table("student_info").
+            Options(&options.UpdateOptions{}).
+            Select("name", "sex", "age", "balance", "created_time").
+            Update()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+```
+
+
+
 ## 聚合查询
+
+SELECT AVG(age) AS age, COUNT(1) AS total FROM  student_info WHERE sex='female' 
+
+```go
+type StudentAgg struct {
+	Age   int `bson:"age"`
+	Total int `bson:"total"`
+}
+
+/*
+		db.getCollection("student_info").aggregate([
+		   {
+		     "$match":{
+				    "sex":"female"
+			   },
+			 },
+			 {
+			   "$group":{
+			      		"_id":null,
+						"age":{ "$avg":"$age"},
+						"total":{ "$sum":1}
+					}
+		   },
+			 {
+			   "$project":{
+			         "_id":0,
+					 "age":1,
+					 "total":1
+					}
+			 }
+		]
+		)
+		----------
+		{
+		    "age": 18,
+		    "total": 14
+		}
+	*/
+
+	var agg []*StudentAgg
+	// create match stage
+	match := bson.D{
+		{
+			"$match", bson.D{
+				{"sex", "female"},
+			},
+		},
+	}
+	// create group stage
+	group := bson.D{
+		{"$group", bson.D{
+			{"_id", nil},
+			{"age", bson.D{{"$avg", "$age"}}},
+			{"total", bson.D{{"$sum", 1}}},
+		}}}
+	// create projection stage
+	project := bson.D{
+		{"$project", bson.D{
+			{"_id", 0},
+			{"age", 1},
+			{"total", 1},
+		}}}
+	err := e.Model(&agg).
+            Table("student_info").
+            Options(&options.AggregateOptions{}).
+            Pipeline(match, group, project).
+            Aggregate()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("aggregate rows %d", len(agg))
+	for _, a := range agg {
+		log.Infof("%+v", a)
+	}
+```
+
+
+
+
 
 ## 地理位置查询
 
-## 
+- 查询某一点1000米范围内所有的餐馆
+
+```go
+type Restaurant struct {
+	Id       string `json:"_id" bson:"_id,omitempty"`
+	Location struct {
+		Type        string    `json:"type" bson:"type"`
+		Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+	} `json:"location" bson:"location"`
+	Name     string  `json:"name" bson:"name"`
+	Distance float64 `json:"distance" bson:"distance"`
+}
+	
+const maxMeters = 1000 //meters
+var pos = mgoc.Coordinate{X: -73.93414657, Y: 40.82302903}
+//query restaurants near by distance 1000 meters
+var restaurants []*Restaurant
+err := e.Model(&restaurants).
+        Table("restaurants").
+        GeoCenterSphere("location", pos, maxMeters).
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("center sphere restaurants total [%d]", len(restaurants))
+```
+
+
+
+- 查询某个社区范围内的所有餐馆
+
+```go
+type Neighborhood struct {
+	Id       string   `json:"_id" bson:"_id,omitempty"`
+	Geometry Geometry `json:"geometry" bson:"geometry"`
+	Name     string   `json:"name" bson:"name"`
+}
+type Restaurant struct {
+	Id       string `json:"_id" bson:"_id,omitempty"`
+	Location struct {
+		Type        string    `json:"type" bson:"type"`
+		Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+	} `json:"location" bson:"location"`
+	Name     string  `json:"name" bson:"name"`
+	Distance float64 `json:"distance" bson:"distance"`
+}
+
+var neighbor *Neighborhood
+var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
+//查询 -73.93414657, 40.82302903 所在社区的社区范围信息
+err = e.Model(&neighbor).
+        Table("neighborhoods").
+        Filter(bson.M{
+            "geometry": bson.M{
+                mgoc.KeyGeoIntersects: bson.M{
+                    KeyGeoMetry: mgoc.NewGeoMetry(mgoc.GeoTypePoint, mgoc.FloatArray{pos.X, pos.Y}),
+                },
+            },
+        }).
+        Limit(1).
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("neighborhood [%+v]", neighbor)
+//查询社区范围内的餐馆
+var restaurants []*Restaurant
+err = e.Model(&restaurants).
+        Table("restaurants").
+        Geometry("location", &neighbor.Geometry).
+        Query()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("neighborhood restaurants total [%d]", len(restaurants))
+```
+
+- 查询某一点附近1000米内的所有餐馆数据并附带距离
+
+```go
+type Restaurant struct {
+	Id       string `json:"_id" bson:"_id,omitempty"`
+	Location struct {
+		Type        string    `json:"type" bson:"type"`
+		Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+	} `json:"location" bson:"location"`
+	Name     string  `json:"name" bson:"name"`
+	Distance float64 `json:"distance" bson:"distance"`
+}
+const maxMeters = 1000 //meters
+var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
+var restaurants []*Restaurant
+	err = e.Model(&restaurants).
+		Table("restaurants").
+		GeoNearByPoint(
+            "location", //存储经纬度的字段
+			pos, //当前位置数据
+             maxMeters, //最大距离数(米)
+			"distance"). //距离数据输出字段名
+		Aggregate()
+	for _, restaurant := range restaurants {
+		log.Debugf("geo near restaurant [%+v]", restaurant)
+	}
+	log.Infof("geo near restaurants total [%d]", len(restaurants))
+```
 
