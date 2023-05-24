@@ -243,7 +243,7 @@ log.Infof("single student %+v", student)
 
 - 多条查询
 
-SELECT _id, name, age, sex FROM student_info LIMIT 10 ORDER BY created_time DESC
+SELECT _id, name, age, sex FROM student_info ORDER BY created_time DESC LIMIT 10
 
 ```go
 var err error
@@ -266,7 +266,7 @@ for _, student := range students {
 
 - 分页查询
 
-SELECT _id, name, age, sex FROM student_info LIMIT 0,10 ORDER BY created_time DESC
+SELECT _id, name, age, sex FROM student_info ORDER BY created_time DESC LIMIT 0,10
 
 ```go
 var students []*Student
