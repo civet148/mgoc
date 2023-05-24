@@ -359,7 +359,7 @@ var student = &Student{
 		Balance:     mgoc.NewDecimal("123.456"),
 		CreatedTime: time.Now(),
 	}
-_, err = e.Model(&student).
+_, err := e.Model(&student).
             Table("student_info").
             Options(&options.UpdateOptions{}).
             Select("name", "sex", "age", "balance", "created_time").
@@ -410,11 +410,11 @@ if err != nil {
     return
 }
 var student = &Student{
-		Id:          oid,
-         ClassNo:     "CLASS-3",
-         ExtraData:   ExtraData {
-             IdCard: "6553239109322",
-         },
+        Id:          oid,
+        ClassNo:     "CLASS-3",
+        ExtraData:   ExtraData {
+			IdCard: "6553239109322",
+        },
 	}
 // UPDATE student_info 
 // SET class_no='CLASS-3', extra_data.id_card='6553239109322'
@@ -449,7 +449,7 @@ if err != nil {
 
 
 
-```sh
+```go
 var err error
 _, err = e.Model().
         Table("student_info").
@@ -458,11 +458,11 @@ _, err = e.Model().
         Set("sex", "female").
         Set("age", 18).
         Set("created_time", time.Now()).
-        Set("balance", NewDecimal("520.1314")).
+        Set("balance", mgoc.NewDecimal("520.1314")).
         Upsert()
 if err != nil {
-log.Errorf(err.Error())
-	return
+    log.Errorf(err.Error())
+    return
 }
 ```
 
@@ -527,42 +527,42 @@ type StudentAgg struct {
 		}
 	*/
 
-	var agg []*StudentAgg
-	// create match stage
-	match := bson.D{
-		{
-			"$match", bson.D{
-				{"sex", "female"},
-			},
-		},
-	}
-	// create group stage
-	group := bson.D{
-		{"$group", bson.D{
-			{"_id", nil},
-			{"age", bson.D{{"$avg", "$age"}}},
-			{"total", bson.D{{"$sum", 1}}},
-		}}}
-	// create projection stage
-	project := bson.D{
-		{"$project", bson.D{
-			{"_id", 0},
-			{"age", 1},
-			{"total", 1},
-		}}}
-	err := e.Model(&agg).
-            Table("student_info").
-            Options(&options.AggregateOptions{}).
-            Pipeline(match, group, project).
-            Aggregate()
-	if err != nil {
-		log.Errorf(err.Error())
-		return
-	}
-	log.Infof("aggregate rows %d", len(agg))
-	for _, a := range agg {
-		log.Infof("%+v", a)
-	}
+var agg []*StudentAgg
+// create match stage
+match := bson.D{
+    {
+        "$match", bson.D{
+            {"sex", "female"},
+        },
+    },
+}
+// create group stage
+group := bson.D{
+    {"$group", bson.D{
+        {"_id", nil},
+        {"age", bson.D{{"$avg", "$age"}}},
+        {"total", bson.D{{"$sum", 1}}},
+    }}}
+// create projection stage
+project := bson.D{
+    {"$project", bson.D{
+        {"_id", 0},
+        {"age", 1},
+        {"total", 1},
+    }}}
+err := e.Model(&agg).
+Table("student_info").
+Options(&options.AggregateOptions{}).
+Pipeline(match, group, project).
+Aggregate()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("aggregate rows %d", len(agg))
+for _, a := range agg {
+    log.Infof("%+v", a)
+}
 ```
 
 
@@ -666,18 +666,22 @@ type Restaurant struct {
 const maxMeters = 1000 //meters
 var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
 var restaurants []*Restaurant
-	err = e.Model(&restaurants).
-		Table("restaurants").
-		GeoNearByPoint(
-            "location", //存储经纬度的字段
-			pos, //当前位置数据
-             maxMeters, //最大距离数(米)
-			"distance"). //距离数据输出字段名
-		Aggregate()
-	for _, restaurant := range restaurants {
-		log.Debugf("geo near restaurant [%+v]", restaurant)
-	}
-	log.Infof("geo near restaurants total [%d]", len(restaurants))
+err := e.Model(&restaurants).
+Table("restaurants").
+GeoNearByPoint(
+    "location", //存储经纬度的字段
+    pos, //当前位置数据
+    maxMeters, //最大距离数(米)
+    "distance"). //距离数据输出字段名
+Aggregate()
+if err != nil {
+    log.Errorf(err.Error())
+    return 
+}
+for _, restaurant := range restaurants {
+    log.Debugf("geo near restaurant [%+v]", restaurant)
+}
+log.Infof("geo near restaurants total [%d]", len(restaurants))
 ```
 
 ## 切换数据库
