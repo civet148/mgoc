@@ -3,6 +3,8 @@ package mgoc
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type ObjectID = primitive.ObjectID
+type Decimal128 = primitive.Decimal128
+type DateTime = primitive.DateTime
 
 type GeoType string
 

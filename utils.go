@@ -2,9 +2,11 @@ package mgoc
 
 import (
 	"encoding/hex"
+	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	bson2 "gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 const (
@@ -17,8 +19,24 @@ func NewObjectID() ObjectID {
 	return primitive.NewObjectID()
 }
 
-func NewObjectIDFromString(v string) ObjectID {
-	return ToObjectID(v).(ObjectID)
+func NewObjectIDFromString(v string) (ObjectID, error) {
+	oid, err := primitive.ObjectIDFromHex(v)
+	if err != nil {
+		return oid, log.Errorf("new object id from string %s error [%s]", v, err)
+	}
+	return oid, nil
+}
+
+func NewObjectIDFromTimestamp(t time.Time) ObjectID {
+	return primitive.NewObjectIDFromTimestamp(t)
+}
+
+func NewDecimal128(high, low uint64) Decimal128 {
+	return primitive.NewDecimal128(high, low)
+}
+
+func NewDateTimeFromTime(t time.Time) DateTime {
+	return primitive.NewDateTimeFromTime(t)
 }
 
 func ConvertValue(column string, value interface{}) (v interface{}) {

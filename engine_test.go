@@ -290,33 +290,26 @@ func Insert(e *Engine) {
 
 func Update(e *Engine) {
 	var err error
-	//_, err = e.Model().
-	//	Table(TableNameStudentInfo).
-	//	Options(&options.UpdateOptions{}).
-	//	Filter(bson.M{
-	//		"_id": officialObjectId,
-	//	}).
-	//	Set("name", "golang2006").
-	//	Set("sex", "xx").
-	//	Set("balance", NewDecimal("52.01")).
-	//	Update()
-	//if err != nil {
-	//	log.Errorf(err.Error())
-	//	return
-	//}
-	//
-	var s *docStudent
-	err = e.Model(&s).
+	_, err = e.Model().
 		Table(TableNameStudentInfo).
+		Options(&options.UpdateOptions{}).
 		Id(officialObjectId).
-		Query()
-	log.Infof("query updated student [%+v]", s)
+		Set("name", "golang2006").
+		Set("sex", "xx").
+		Set("balance", NewDecimal("52.01")).
+		Update()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+
+	oid, err := NewObjectIDFromString(officialObjectId)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
 	}
 	var student = &docStudent{
-		Id:          NewObjectIDFromString(officialObjectId),
+		Id:          oid,
 		Name:        "kary",
 		Sex:         "female",
 		Age:         39,
