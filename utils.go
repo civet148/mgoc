@@ -17,6 +17,10 @@ func NewObjectID() ObjectID {
 	return primitive.NewObjectID()
 }
 
+func NewObjectIDFromString(v string) ObjectID {
+	return ToObjectID(v).(ObjectID)
+}
+
 func ConvertValue(column string, value interface{}) (v interface{}) {
 	if column == defaultPrimaryKeyName {
 		v = ToObjectID(value)

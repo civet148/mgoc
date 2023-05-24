@@ -316,7 +316,7 @@ func Update(e *Engine) {
 		return
 	}
 	var student = &docStudent{
-		Id:          ToObjectID(officialObjectId).(ObjectID),
+		Id:          NewObjectIDFromString(officialObjectId),
 		Name:        "kary",
 		Sex:         "female",
 		Age:         39,
