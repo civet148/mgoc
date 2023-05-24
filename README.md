@@ -345,6 +345,8 @@ for _, student := range students {
 
 ## 更新操作
 
+- 通过数据模型更新字段
+
 UPDATE student_info SET name='kary', sex='female', age=39, balance='123.456', created_time=NOW() WHERE _id='6438f32fd71fc42e601558aa'
 
 ```go
@@ -361,6 +363,23 @@ _, err = e.Model(&student).
             Table("student_info").
             Options(&options.UpdateOptions{}).
             Select("name", "sex", "age", "balance", "created_time").
+            Update()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+```
+
+- 通过Set方式更新字段
+
+```go
+_, err := e.Model().
+            Table("student_info").
+            Options(&options.UpdateOptions{}).
+		   Id("6438f32fd71fc42e601558aa")
+            Set("name", "mason").
+            Set("sex", "male").
+            Set("balance", mgoc.NewDecimal("123.456")).
             Update()
 if err != nil {
     log.Errorf(err.Error())
