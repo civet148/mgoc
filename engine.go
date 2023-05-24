@@ -221,6 +221,38 @@ func (e *Engine) Update() (rows int64, err error) {
 	return res.ModifiedCount, nil
 }
 
+// Upsert update or insert
+func (e *Engine) Upsert() (rows int64, err error) {
+	defer e.clean()
+	ctx, cancel := ContextWithTimeout(e.engineOpt.WriteTimeout)
+	defer cancel()
+	col := e.Collection(e.strTableName)
+	var opts []*options.UpdateOptions
+	var upsert = true
+	if len(e.options) == 0 {
+		e.options = append(e.options, &options.UpdateOptions{
+			Upsert: &upsert,
+		})
+	}
+	for _, opt := range e.options {
+		o := opt.(*options.UpdateOptions)
+		if o.Upsert == nil {
+			o.Upsert = &upsert
+		}
+		opts = append(opts, opt.(*options.UpdateOptions))
+	}
+	e.makeUpdates()
+	e.debugJson("filter", e.filter, "updates", e.updates)
+	if len(e.filter) == 0 {
+		return 0, log.Errorf("filter is empty")
+	}
+	res, err := col.UpdateMany(ctx, e.filter, e.updates, opts...)
+	if err != nil {
+		return 0, log.Errorf(err.Error())
+	}
+	return res.ModifiedCount, nil
+}
+
 // UpdateOne update one document
 func (e *Engine) UpdateOne() (rows int64, err error) {
 	defer e.clean()

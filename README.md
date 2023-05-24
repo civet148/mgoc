@@ -389,6 +389,31 @@ if err != nil {
 
 
 
+## 更新或插入
+
+
+
+```sh
+var err error
+_, err = e.Model().
+        Table("student_info").
+        Id("6438f32fd71fc42e601558aa").
+        Set("name", "rose").
+        Set("sex", "female").
+        Set("age", 18).
+        Set("created_time", time.Now()).
+        Set("balance", NewDecimal("520.1314")).
+        Upsert()
+if err != nil {
+log.Errorf(err.Error())
+	return
+}
+```
+
+
+
+
+
 ## 删除操作
 
 ```go

@@ -76,13 +76,14 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	Insert(e)
-	Query(e)
-	GeoQuery(e)
-	Update(e)
-	Count(e)
-	Delete(e)
-	Aggregate(e)
+	//Insert(e)
+	//Query(e)
+	//GeoQuery(e)
+	//Update(e)
+	Upsert(e)
+	//Count(e)
+	//Delete(e)
+	//Aggregate(e)
 }
 
 func GeoQuery(e *Engine) {
@@ -322,6 +323,23 @@ func Update(e *Engine) {
 		Options(&options.UpdateOptions{}).
 		Select("name", "sex", "age", "balance", "created_time").
 		Update()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+}
+
+func Upsert(e *Engine) {
+	var err error
+	_, err = e.Model().
+		Table(TableNameStudentInfo).
+		Id(officialObjectId).
+		Set("name", "rose").
+		Set("sex", "female").
+		Set("age", 18).
+		Set("created_time", time.Now()).
+		Set("balance", NewDecimal("520.1314")).
+		Upsert()
 	if err != nil {
 		log.Errorf(err.Error())
 		return
