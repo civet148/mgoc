@@ -510,7 +510,7 @@ err = e.Model(&neighbor).
         Filter(bson.M{
             "geometry": bson.M{
                 mgoc.KeyGeoIntersects: bson.M{
-                    KeyGeoMetry: mgoc.NewGeoMetry(mgoc.GeoTypePoint, mgoc.FloatArray{pos.X, pos.Y}),
+                    mgoc.KeyGeoMetry: mgoc.NewGeoMetry(mgoc.GeoTypePoint, mgoc.FloatArray{pos.X, pos.Y}),
                 },
             },
         }).
@@ -561,5 +561,11 @@ var restaurants []*Restaurant
 		log.Debugf("geo near restaurant [%+v]", restaurant)
 	}
 	log.Infof("geo near restaurants total [%d]", len(restaurants))
+```
+
+## 切换数据库
+
+```go
+  db := e.Use("test2")
 ```
 

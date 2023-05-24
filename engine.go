@@ -363,6 +363,11 @@ func (e *Engine) Query() (err error) {
 	return nil
 }
 
+func (e *Engine) FindOne() (err error) {
+	e.Limit(1)
+	return e.Query()
+}
+
 // Count orm count documents
 func (e *Engine) Count() (rows int64, err error) {
 	assert(e.strTableName, "table name not set")
