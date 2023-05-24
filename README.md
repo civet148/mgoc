@@ -128,12 +128,13 @@ import (
 )
 
 type Student struct {
-	Id          string    `bson:"_id,omitempty"`
-	Name        string    `bson:"name"`
-	Sex         string    `bson:"sex"`
-	Age         int       `bson:"age"`
-	ClassNo     string    `bson:"class_no"`
-	CreatedTime time.Time `bson:"created_time"`
+	Id          string    		`bson:"_id,omitempty"`
+	Name        string    		`bson:"name"`
+	Sex         string    		`bson:"sex"`
+	Age         int       		`bson:"age"`
+    Balance     mgoc.Decimal	`bson:"balance"`
+	ClassNo     string    		`bson:"class_no"`
+	CreatedTime time.Time 		`bson:"created_time"`
 }
 
 func main() {
@@ -396,15 +397,16 @@ type ExtraData struct {
 }
 
 type Student struct {
-    Id          string    `bson:"_id,omitempty"`
-    Name        string    `bson:"name"`
-    Sex         string    `bson:"sex"`
-    Age         int       `bson:"age"`
-    ClassNo     string    `bson:"class_no"`
-    CreatedTime time.Time `bson:"created_time"`
-    ExtraData   ExtraData `bson:"extra_data"`
+    Id          string    		`bson:"_id,omitempty"`
+    Name        string    		`bson:"name"`
+    Sex         string    		`bson:"sex"`
+    Age         int       		`bson:"age"`
+    ClassNo     string    		`bson:"class_no"`
+    Balance     mgoc.Decimal	`bson:"balance"`
+    CreatedTime time.Time 		`bson:"created_time"`
+    ExtraData   ExtraData 		`bson:"extra_data"`
 }
-oid, err := NewObjectIDFromString("6438f32fd71fc42e601558aa")
+oid, err := mgoc.NewObjectIDFromString("6438f32fd71fc42e601558aa")
 if err != nil {
     log.Errorf(err.Error())
     return
@@ -551,10 +553,10 @@ project := bson.D{
         {"total", 1},
     }}}
 err := e.Model(&agg).
-Table("student_info").
-Options(&options.AggregateOptions{}).
-Pipeline(match, group, project).
-Aggregate()
+        Table("student_info").
+        Options(&options.AggregateOptions{}).
+        Pipeline(match, group, project).
+        Aggregate()
 if err != nil {
     log.Errorf(err.Error())
     return
@@ -606,7 +608,7 @@ log.Infof("center sphere restaurants total [%d]", len(restaurants))
 ```go
 type Neighborhood struct {
 	Id       string   `json:"_id" bson:"_id,omitempty"`
-	Geometry Geometry `json:"geometry" bson:"geometry"`
+	Geometry mgoc.Geometry `json:"geometry" bson:"geometry"`
 	Name     string   `json:"name" bson:"name"`
 }
 type Restaurant struct {
@@ -667,13 +669,13 @@ const maxMeters = 1000 //meters
 var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
 var restaurants []*Restaurant
 err := e.Model(&restaurants).
-Table("restaurants").
-GeoNearByPoint(
-    "location", //存储经纬度的字段
-    pos, //当前位置数据
-    maxMeters, //最大距离数(米)
-    "distance"). //距离数据输出字段名
-Aggregate()
+        Table("restaurants").
+        GeoNearByPoint(
+            "location", //存储经纬度的字段
+            pos, //当前位置数据
+            maxMeters, //最大距离数(米)
+            "distance"). //距离数据输出字段名
+        Aggregate()
 if err != nil {
     log.Errorf(err.Error())
     return 
