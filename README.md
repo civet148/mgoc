@@ -389,6 +389,23 @@ if err != nil {
 
 
 
+## 删除操作
+
+```go
+rows, err := e.Model().
+                Table("student_info").
+                Options(&options.DeleteOptions{}).
+                Id("6438f32fd71fc42e601558aa").
+                Delete()
+if err != nil {
+    log.Errorf(err.Error())
+    return
+}
+log.Infof("rows %d deleted", rows)
+```
+
+
+
 ## 聚合查询
 
 SELECT AVG(age) AS age, COUNT(1) AS total FROM  student_info WHERE sex='female' 
