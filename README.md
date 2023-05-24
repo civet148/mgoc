@@ -243,7 +243,7 @@ log.Infof("single student %+v", student)
 
 - 多条查询
 
-SELECT _id, name, age, sex FROM student_info LIMIT 10
+SELECT _id, name, age, sex FROM student_info LIMIT 10 ORDER BY created_time DESC
 
 ```go
 var err error
@@ -266,7 +266,7 @@ for _, student := range students {
 
 - 分页查询
 
-SELECT _id, name, age, sex FROM student_info LIMIT 0,10
+SELECT _id, name, age, sex FROM student_info LIMIT 0,10 ORDER BY created_time DESC
 
 ```go
 var students []*Student
@@ -289,7 +289,7 @@ for _, student := range students {
 
 - 条件查询
 
-SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16
+SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16 ORDER BY created_time DESC
 
 ```go
 var err error
@@ -316,7 +316,7 @@ for _, student := range students {
 
 - 自定义查询
 
-SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16
+SELECT _id, name, age, sex FROM student_info WHERE class_no='CLASS-2' AND age >= 11 and age <=16 ORDER BY created_time DESC
 
 ```go
 var err error
