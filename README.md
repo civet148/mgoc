@@ -376,7 +376,7 @@ if err != nil {
 _, err := e.Model().
             Table("student_info").
             Options(&options.UpdateOptions{}).
-		   Id("6438f32fd71fc42e601558aa")
+            Id("6438f32fd71fc42e601558aa").
             Set("name", "mason").
             Set("sex", "male").
             Set("balance", mgoc.NewDecimal("123.456")).
