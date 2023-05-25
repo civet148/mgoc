@@ -500,10 +500,10 @@ SELECT AVG(age) AS age, SUM(1) AS total, SUM(balance) as balance FROM  student_i
       Name string `bson:"name"`
   }
   type StudentAgg struct {
-    ID    AggID   `bson:"_id"`
-    Age   float64 `bson:"age"`
-    Total int     `bson:"total"`
-    Balance Decimal `bson:"balance"`
+    ID    AggID             `bson:"_id"`
+    Age   float64           `bson:"age"`
+    Total int               `bson:"total"`
+    Balance mgoc.Decimal    `bson:"balance"`
   }
   var agg []*StudentAgg
   err := e.Model(&agg).
