@@ -76,14 +76,15 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	//Insert(e)
-	//Query(e)
-	GeoQuery(e)
-	//Update(e)
-	//Upsert(e)
-	//Count(e)
-	//Delete(e)
-	//Aggregate(e)
+	//OrmInsert(e)
+	//OrmQuery(e)
+	//GeoQuery(e)
+	//OrmUpdate(e)
+	//OrmUpsert(e)
+	//OrmCount(e)
+	//OrmDelete(e)
+	OrmAggregate(e)
+	PipelineAggregate(e)
 }
 
 func GeoQuery(e *Engine) {
@@ -154,7 +155,7 @@ func GeoQuery(e *Engine) {
 	log.Infof("geo near restaurants total [%d]", len(restaurants3))
 }
 
-func Query(e *Engine) {
+func OrmQuery(e *Engine) {
 	var err error
 	var student *docStudent
 	err = e.Model(&student).
@@ -218,7 +219,7 @@ func Query(e *Engine) {
 	}
 }
 
-func Count(e *Engine) {
+func OrmCount(e *Engine) {
 	rows, err := e.Model().
 		Options(&options.CountOptions{}).
 		Table(TableNameStudentInfo).
@@ -295,7 +296,7 @@ func Insert(e *Engine) {
 	log.Infof("[Many] insert ids %+v", ids)
 }
 
-func Update(e *Engine) {
+func OrmUpdate(e *Engine) {
 	var err error
 	_, err = e.Model().
 		Table(TableNameStudentInfo).
@@ -335,7 +336,7 @@ func Update(e *Engine) {
 	}
 }
 
-func Upsert(e *Engine) {
+func OrmUpsert(e *Engine) {
 	var err error
 	_, err = e.Model().
 		Table(TableNameStudentInfo).
@@ -352,7 +353,7 @@ func Upsert(e *Engine) {
 	}
 }
 
-func Delete(e *Engine) {
+func OrmDelete(e *Engine) {
 
 	rows, err := e.Model().
 		Table(TableNameStudentInfo).
@@ -370,18 +371,46 @@ func Delete(e *Engine) {
 	log.Infof("rows %d", rows)
 }
 
-type StudentAgg struct {
-	Age   int `bson:"age"`
-	Total int `bson:"total"`
+type AggID struct {
+	Name string `bson:"name"`
 }
 
-func Aggregate(e *Engine) {
+type StudentAgg struct {
+	ID      AggID   `bson:"_id"`
+	Age     float64 `bson:"age"`
+	Total   int     `bson:"total"`
+	Balance Decimal `bson:"balance"`
+}
+
+func OrmAggregate(e *Engine) {
+	var agg []*StudentAgg
+	err := e.Model(&agg).
+		Table(TableNameStudentInfo).
+		Avg("age").
+		Sum("total", 1).
+		Sum("balance").
+		Eq("sex", "female").
+		GroupBy("name", "age").
+		Aggregate()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	log.Infof("aggregate rows %d", len(agg))
+	for _, a := range agg {
+		log.Infof("%+v", a)
+	}
+	//db := e.Use("monitor")
+
+}
+
+func PipelineAggregate(e *Engine) {
 
 	/*
 		db.getCollection("student_info").aggregate([
 		   {
 		     "$match":{
-				    "name":"john"
+				    "sex":"female"
 			   },
 			 },
 			 {
@@ -411,25 +440,28 @@ func Aggregate(e *Engine) {
 	// create match stage
 	match := bson.D{
 		{
-			"$match", bson.D{
-				{"sex", "female"},
+			"$match", bson.M{
+				"sex": "female",
 			},
 		},
 	}
 	// create group stage
 	group := bson.D{
-		{"$group", bson.D{
-			{"_id", nil},
-			{"age", bson.D{{"$avg", "$age"}}},
-			{"total", bson.D{{"$sum", 1}}},
+		{"$group", bson.M{
+			"_id":   nil,
+			"age":   bson.M{"$avg": "$age"},
+			"total": bson.M{"$sum": 1},
 		}}}
-	// create projection stage
+	//create projection stage
 	project := bson.D{
-		{"$project", bson.D{
-			{"_id", 0},
-			{"age", 1},
-			{"total", 1},
-		}}}
+		{
+			"$project", bson.M{
+				"_id":   0,
+				"age":   1,
+				"total": 1,
+			},
+		},
+	}
 	err := e.Model(&agg).
 		Table(TableNameStudentInfo).
 		Options(&options.AggregateOptions{}).

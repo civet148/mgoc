@@ -491,6 +491,41 @@ log.Infof("rows %d deleted", rows)
 
 ## 聚合查询
 
+- ORM聚合查询
+
+SELECT AVG(age) AS age, SUM(1) AS total, SUM(balance) as balance FROM  student_info WHERE sex='female' GROUP BY name, age
+
+```go
+  type AggID struct {
+      Name string `bson:"name"`
+  }
+  type StudentAgg struct {
+    ID    AggID   `bson:"_id"`
+    Age   float64 `bson:"age"`
+    Total int     `bson:"total"`
+    Balance Decimal `bson:"balance"`
+  }
+  var agg []*StudentAgg
+  err := e.Model(&agg).
+        Table("student_info").
+        Avg("age").
+        Sum("total", 1).
+        Sum("balance").
+        Eq("sex", "female").
+        GroupBy("name", "age").
+        Aggregate()
+  if err != nil {
+    log.Errorf(err.Error())
+    return
+  }
+  log.Infof("aggregate rows %d", len(agg))
+  for _, a := range agg {
+    log.Infof("%+v", a)
+  }
+```
+
+- 自定义聚合查询
+
 SELECT AVG(age) AS age, COUNT(1) AS total FROM  student_info WHERE sex='female' 
 
 ```go
@@ -522,10 +557,11 @@ SELECT AVG(age) AS age, COUNT(1) AS total FROM  student_info WHERE sex='female'
 		    "age": 18,
 		    "total": 14
 		}
-	*/
+*/
+
 type StudentAgg struct {
-      Age   int `bson:"age"`
-      Total int `bson:"total"`
+  Age   float64 `bson:"age"`
+  Total int     `bson:"total"`
 }
 var agg []*StudentAgg
 // create match stage

@@ -23,29 +23,31 @@ type Option struct {
 }
 
 type Engine struct {
-	debug         bool                   // enable debug mode
-	engineOpt     *Option                // option for the engine
-	options       []interface{}          // mongodb operation options (find/update/delete/insert...)
-	client        *mongo.Client          // mongodb client
-	db            *mongo.Database        // database instance
-	strPkName     string                 // primary key of table, default '_id'
-	strTableName  string                 // table name
-	modelType     ModelType              // model type
-	models        []interface{}          // data model [struct object or struct slice]
-	dict          map[string]interface{} // data model dictionary
-	selectColumns []string               // select columns to query/update
-	exceptColumns map[string]bool        // except columns to query/update
-	andConditions map[string]interface{} // AND conditions to query
-	orConditions  map[string]interface{} // OR conditions to query
-	ascColumns    []string               // columns to order by ASC
-	descColumns   []string               // columns to order by DESC
-	skip          int64                  // mongodb skip
-	limit         int64                  // mongodb limit
-	filter        bson.M                 // mongodb filter
-	updates       bson.M                 // mongodb updates
-	pipeline      mongo.Pipeline         // mongodb pipeline
-	locker        sync.RWMutex           // internal locker
-	isGeoQuery    bool                   // is a GeoNear query?
+	debug           bool                   // enable debug mode
+	engineOpt       *Option                // option for the engine
+	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
+	client          *mongo.Client          // mongodb client
+	db              *mongo.Database        // database instance
+	strPkName       string                 // primary key of table, default '_id'
+	strTableName    string                 // table name
+	modelType       ModelType              // model type
+	models          []interface{}          // data model [struct object or struct slice]
+	dict            map[string]interface{} // data model dictionary
+	selectColumns   []string               // select columns to query/update
+	exceptColumns   map[string]bool        // except columns to query/update
+	andConditions   map[string]interface{} // AND conditions to query
+	orConditions    map[string]interface{} // OR conditions to query
+	groupConditions bson.M                 // Group conditions to query
+	ascColumns      []string               // columns to order by ASC
+	descColumns     []string               // columns to order by DESC
+	groupByColumns  []string               // columns to group by
+	skip            int64                  // mongodb skip
+	limit           int64                  // mongodb limit
+	filter          bson.M                 // mongodb filter
+	updates         bson.M                 // mongodb updates
+	pipeline        mongo.Pipeline         // mongodb pipeline
+	locker          sync.RWMutex           // internal locker
+	isGeoQuery      bool                   // is a GeoNear query?
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -77,18 +79,19 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		debug = true
 	}
 	return &Engine{
-		debug:         debug,
-		engineOpt:     opt,
-		db:            db,
-		client:        client,
-		strPkName:     defaultPrimaryKeyName,
-		models:        make([]interface{}, 0),
-		exceptColumns: make(map[string]bool),
-		dict:          make(map[string]interface{}),
-		filter:        make(map[string]interface{}),
-		updates:       make(map[string]interface{}),
-		andConditions: make(map[string]interface{}),
-		orConditions:  make(map[string]interface{}),
+		debug:           debug,
+		engineOpt:       opt,
+		db:              db,
+		client:          client,
+		strPkName:       defaultPrimaryKeyName,
+		models:          make([]interface{}, 0),
+		exceptColumns:   make(map[string]bool),
+		dict:            make(map[string]interface{}),
+		filter:          make(map[string]interface{}),
+		updates:         make(map[string]interface{}),
+		andConditions:   make(map[string]interface{}),
+		orConditions:    make(map[string]interface{}),
+		groupConditions: make(map[string]interface{}),
 	}, nil
 }
 
@@ -482,20 +485,25 @@ func (e *Engine) Except(strColumns ...string) *Engine {
 
 // Pipeline aggregate pipeline
 func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
-	var pipeline = mongo.Pipeline{}
 	for _, v := range pipelines {
 		if v != nil {
-			pipeline = append(pipeline, v)
+			e.pipeline = append(e.pipeline, v)
 		}
 	}
-	e.pipeline = pipeline
+	return e
+}
+
+func (e *Engine) GroupBy(columns ...string) *Engine {
+	if len(columns) == 0 {
+		return e
+	}
+	e.groupByColumns = append(e.groupByColumns, columns...)
 	return e
 }
 
 // Aggregate execute aggregate pipeline
 func (e *Engine) Aggregate() (err error) {
 	assert(e.models, "query model is nil")
-	assert(e.pipeline, "pipeline is nil")
 
 	defer e.clean()
 	var opts []*options.AggregateOptions
@@ -507,15 +515,9 @@ func (e *Engine) Aggregate() (err error) {
 	defer cancel()
 	var cur *mongo.Cursor
 
-	if p := e.makePipelineSort(); p != nil {
-		e.pipeline = append(e.pipeline, p)
-	}
-	if p := e.makePipelineSkip(); p != nil {
-		e.pipeline = append(e.pipeline, p)
-	}
-	if p := e.makePipelineLimit(); p != nil {
-		e.pipeline = append(e.pipeline, p)
-	}
+	e.makeGroupByPipelines()
+	assert(e.pipeline, "pipeline is nil")
+
 	e.debugJson("pipeline", e.pipeline)
 
 	if e.strTableName == "" {
@@ -824,4 +826,20 @@ func (e *Engine) Page(pageNo, pageSize int) *Engine {
 		e.skip = int64(pageSize * pageNo)
 	}
 	return e
+}
+
+func (e *Engine) Sum(strColumn string, values ...interface{}) *Engine {
+	return e.addGroupCondition(strColumn, KeySum, values...)
+}
+
+func (e *Engine) Avg(strColumn string, values ...interface{}) *Engine {
+	return e.addGroupCondition(strColumn, KeyAvg, values...)
+}
+
+func (e *Engine) Max(strColumn string, values ...interface{}) *Engine {
+	return e.addGroupCondition(strColumn, KeyMax, values...)
+}
+
+func (e *Engine) Min(strColumn string, values ...interface{}) *Engine {
+	return e.addGroupCondition(strColumn, KeyMin, values...)
 }

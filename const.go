@@ -32,6 +32,11 @@ const (
 	KeyNearSphere       = "$nearSphere"
 	KeyGeoMetry         = "$geometry"
 	KeyMaxDistance      = "$maxDistance"
+	KeyMax              = "$max"
+	KeyMin              = "$min"
+	KeyAvg              = "$avg"
+	KeyMod              = "$mod"
+	KeyAbs              = "$abs"
 )
 
 const (

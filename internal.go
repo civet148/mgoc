@@ -48,18 +48,19 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		opts = append(opts, e.engineOpt.DatabaseOpt)
 	}
 	engine := &Engine{
-		debug:         e.debug,
-		engineOpt:     e.engineOpt,
-		client:        e.client,
-		strPkName:     e.strPkName,
-		models:        make([]interface{}, 0),
-		exceptColumns: make(map[string]bool),
-		dict:          make(map[string]interface{}),
-		filter:        make(map[string]interface{}),
-		updates:       make(map[string]interface{}),
-		andConditions: make(map[string]interface{}),
-		orConditions:  make(map[string]interface{}),
-		db:            e.client.Database(strDatabaseName, opts...),
+		debug:           e.debug,
+		engineOpt:       e.engineOpt,
+		client:          e.client,
+		strPkName:       e.strPkName,
+		models:          make([]interface{}, 0),
+		exceptColumns:   make(map[string]bool),
+		dict:            make(map[string]interface{}),
+		filter:          make(map[string]interface{}),
+		updates:         make(map[string]interface{}),
+		andConditions:   make(map[string]interface{}),
+		orConditions:    make(map[string]interface{}),
+		groupConditions: make(map[string]interface{}),
+		db:              e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
 }
@@ -282,7 +283,7 @@ func (e *Engine) makeSort() bson.M {
 	return sort
 }
 
-func (e *Engine) makeFilters() {
+func (e *Engine) makeFilters() bson.M {
 	if e.filter == nil {
 		e.makeFilterMap()
 	}
@@ -295,6 +296,7 @@ func (e *Engine) makeFilters() {
 		e.filter[KeyOr] = or
 	}
 	e.filter = e.replaceObjectID(e.filter)
+	return e.filter
 }
 
 func (e *Engine) isPipelineKeyExist(key string) bool {
@@ -306,46 +308,6 @@ func (e *Engine) isPipelineKeyExist(key string) bool {
 		}
 	}
 	return false
-}
-
-func (e *Engine) makePipelineSort() bson.D {
-	if e.isPipelineKeyExist(KeySort) {
-		return nil
-	}
-	s := e.makeSort()
-	if len(s) == 0 {
-		return nil
-	}
-	var sort = bson.D{
-		{KeySort, e.makeSort()},
-	}
-	return sort
-}
-
-func (e *Engine) makePipelineSkip() bson.D {
-	if e.isPipelineKeyExist(KeySkip) {
-		return nil
-	}
-	if e.skip == 0 {
-		return nil
-	}
-	var skip = bson.D{
-		{KeySkip, e.skip},
-	}
-	return skip
-}
-
-func (e *Engine) makePipelineLimit() bson.D {
-	if e.isPipelineKeyExist(KeyLimit) {
-		return nil
-	}
-	if e.limit == 0 {
-		return nil
-	}
-	var limit = bson.D{
-		{KeyLimit, e.limit},
-	}
-	return limit
 }
 
 //replaceObjectID replace filter _id string to Str2ObjectID
@@ -605,4 +567,144 @@ func (e *Engine) replaceStructFiledObjectId(typ reflect.Type, val reflect.Value)
 			}
 		}
 	}
+}
+
+func (e *Engine) addGroupCondition(column, key string, values ...interface{}) *Engine {
+	var value interface{}
+	if len(values) > 0 {
+		value = values[0]
+	} else {
+		value = fmt.Sprintf("$%s", column)
+	}
+	e.groupConditions[column] = bson.M{key: value}
+	return e
+}
+
+func (e *Engine) makePipelineSort() bson.D {
+	if e.isPipelineKeyExist(KeySort) {
+		return nil
+	}
+	s := e.makeSort()
+	if len(s) == 0 {
+		return nil
+	}
+	var sort = bson.D{
+		{KeySort, e.makeSort()},
+	}
+	return sort
+}
+
+func (e *Engine) makePipelineSkip() bson.D {
+	if e.isPipelineKeyExist(KeySkip) {
+		return nil
+	}
+	if e.skip == 0 {
+		return nil
+	}
+	var skip = bson.D{
+		{KeySkip, e.skip},
+	}
+	return skip
+}
+
+func (e *Engine) makePipelineLimit() bson.D {
+	if e.isPipelineKeyExist(KeyLimit) {
+		return nil
+	}
+	if e.limit == 0 {
+		return nil
+	}
+	var limit = bson.D{
+		{KeyLimit, e.limit},
+	}
+	return limit
+}
+
+func (e *Engine) makePipelineMatch() bson.D {
+	if e.isPipelineKeyExist(KeyMatch) {
+		return nil
+	}
+	filters := e.makeFilters()
+	if len(filters) == 0 {
+		return nil
+	}
+	var match bson.D
+	match = bson.D{
+		{KeyMatch, filters},
+	}
+	return match
+}
+
+func (e *Engine) makePipelineGroup() bson.D {
+	if e.isPipelineKeyExist(KeyGroup) {
+		return nil
+	}
+	var group bson.D
+	if len(e.groupConditions) == 0 {
+		return nil
+	}
+
+	if _, ok := e.groupConditions[defaultPrimaryKeyName]; !ok {
+		if len(e.groupByColumns) != 0 {
+			var ids = bson.M{}
+			for _, col := range e.groupByColumns {
+				ids[col] = fmt.Sprintf("$%s", col)
+			}
+			e.groupConditions[defaultPrimaryKeyName] = ids
+		} else {
+			e.groupConditions[defaultPrimaryKeyName] = nil
+		}
+	}
+
+	group = bson.D{
+		{KeyGroup, e.groupConditions},
+	}
+	return group
+}
+
+func (e *Engine) makePipelineProjection() bson.D {
+	if e.isPipelineKeyExist(KeyProject) {
+		return nil
+	}
+	var project bson.D
+	projection := e.makeProjection()
+	if len(projection) == 0 {
+		return nil
+	}
+	project = bson.D{
+		{KeyProject, projection},
+	}
+	return project
+}
+
+func (e *Engine) makeGroupByPipelines() *Engine {
+	if len(e.pipeline) != 0 {
+		return e
+	}
+	var pipelines []bson.D
+	if p := e.makePipelineMatch(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	if p := e.makePipelineGroup(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	if p := e.makePipelineProjection(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	if p := e.makePipelineSort(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	if p := e.makePipelineSkip(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	if p := e.makePipelineLimit(); p != nil {
+		pipelines = append(pipelines, p)
+	}
+
+	return e.Pipeline(pipelines...)
 }
