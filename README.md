@@ -128,13 +128,13 @@ import (
 )
 
 type Student struct {
-	Id          string    		`bson:"_id,omitempty"`
-	Name        string    		`bson:"name"`
-	Sex         string    		`bson:"sex"`
-	Age         int       		`bson:"age"`
-    Balance     mgoc.Decimal	`bson:"balance"`
-	ClassNo     string    		`bson:"class_no"`
-	CreatedTime time.Time 		`bson:"created_time"`
+      Id          string    		`bson:"_id,omitempty"`
+      Name        string    		`bson:"name"`
+      Sex         string    		`bson:"sex"`
+      Age         int       		`bson:"age"`
+      Balance     mgoc.Decimal	`bson:"balance"`
+      ClassNo     string    		`bson:"class_no"`
+      CreatedTime time.Time 		`bson:"created_time"`
 }
 
 func main() {
@@ -330,7 +330,7 @@ err = e.Model(&students).
             "class_no":"CLASS-2",
             "age": bson.M{"$gte":11},
             "age": bson.M{"$lte":16},
-        })
+        }).
         Desc("created_time").
         Query()
 if err != nil {
@@ -415,9 +415,9 @@ var student = &Student{
         Id:          oid,
         ClassNo:     "CLASS-3",
         ExtraData:   ExtraData {
-			IdCard: "6553239109322",
+            IdCard: "6553239109322",
         },
-	}
+    }
 // UPDATE student_info 
 // SET class_no='CLASS-3', extra_data.id_card='6553239109322'
 // WHERE _id='6438f32fd71fc42e601558aa'
@@ -434,7 +434,7 @@ if err != nil {
 //等同于下面的方式
 _, err = e.Model().
             Table("student_info").
-            Id("6438f32fd71fc42e601558aa")
+            Id("6438f32fd71fc42e601558aa").
             Options(&options.UpdateOptions{}).
             Set("class_no", "CLASS-3").
             Set("extra_data.id_card", "6553239109322").
@@ -494,11 +494,6 @@ log.Infof("rows %d deleted", rows)
 SELECT AVG(age) AS age, COUNT(1) AS total FROM  student_info WHERE sex='female' 
 
 ```go
-type StudentAgg struct {
-	Age   int `bson:"age"`
-	Total int `bson:"total"`
-}
-
 /*
 		db.getCollection("student_info").aggregate([
 		   {
@@ -528,7 +523,10 @@ type StudentAgg struct {
 		    "total": 14
 		}
 	*/
-
+type StudentAgg struct {
+      Age   int `bson:"age"`
+      Total int `bson:"total"`
+}
 var agg []*StudentAgg
 // create match stage
 match := bson.D{
