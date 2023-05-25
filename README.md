@@ -128,13 +128,13 @@ import (
 )
 
 type Student struct {
-      Id          string    		`bson:"_id,omitempty"`
-      Name        string    		`bson:"name"`
-      Sex         string    		`bson:"sex"`
-      Age         int       		`bson:"age"`
-      Balance     mgoc.Decimal	`bson:"balance"`
-      ClassNo     string    		`bson:"class_no"`
-      CreatedTime time.Time 		`bson:"created_time"`
+      Id          string            `bson:"_id,omitempty"`
+      Name        string            `bson:"name"`
+      Sex         string            `bson:"sex"`
+      Age         int               `bson:"age"`
+      Balance     mgoc.Decimal      `bson:"balance"`
+      ClassNo     string            `bson:"class_no"`
+      CreatedTime time.Time         `bson:"created_time"`
 }
 
 func main() {
@@ -397,14 +397,14 @@ type ExtraData struct {
 }
 
 type Student struct {
-    Id          string    		`bson:"_id,omitempty"`
-    Name        string    		`bson:"name"`
-    Sex         string    		`bson:"sex"`
-    Age         int       		`bson:"age"`
-    ClassNo     string    		`bson:"class_no"`
-    Balance     mgoc.Decimal	`bson:"balance"`
-    CreatedTime time.Time 		`bson:"created_time"`
-    ExtraData   ExtraData 		`bson:"extra_data"`
+    Id          string          `bson:"_id,omitempty"`
+    Name        string          `bson:"name"`
+    Sex         string          `bson:"sex"`
+    Age         int             `bson:"age"`
+    ClassNo     string          `bson:"class_no"`
+    Balance     mgoc.Decimal    `bson:"balance"`
+    CreatedTime time.Time       `bson:"created_time"`
+    ExtraData   ExtraData       `bson:"extra_data"`
 }
 oid, err := mgoc.NewObjectIDFromString("6438f32fd71fc42e601558aa")
 if err != nil {
