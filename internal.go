@@ -312,6 +312,10 @@ func (e *Engine) makePipelineSort() bson.D {
 	if e.isPipelineKeyExist(KeySort) {
 		return nil
 	}
+	s := e.makeSort()
+	if len(s) == 0 {
+		return nil
+	}
 	var sort = bson.D{
 		{KeySort, e.makeSort()},
 	}
@@ -322,6 +326,9 @@ func (e *Engine) makePipelineSkip() bson.D {
 	if e.isPipelineKeyExist(KeySkip) {
 		return nil
 	}
+	if e.skip == 0 {
+		return nil
+	}
 	var skip = bson.D{
 		{KeySkip, e.skip},
 	}
@@ -330,6 +337,9 @@ func (e *Engine) makePipelineSkip() bson.D {
 
 func (e *Engine) makePipelineLimit() bson.D {
 	if e.isPipelineKeyExist(KeyLimit) {
+		return nil
+	}
+	if e.limit == 0 {
 		return nil
 	}
 	var limit = bson.D{

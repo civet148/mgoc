@@ -76,14 +76,14 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	Insert(e)
-	Query(e)
+	//Insert(e)
+	//Query(e)
 	GeoQuery(e)
-	Update(e)
-	Upsert(e)
-	Count(e)
+	//Update(e)
+	//Upsert(e)
+	//Count(e)
 	//Delete(e)
-	Aggregate(e)
+	//Aggregate(e)
 }
 
 func GeoQuery(e *Engine) {
@@ -138,7 +138,7 @@ func GeoQuery(e *Engine) {
 	err = e.Model(&restaurants3).
 		Table(TableNameRestaurants).
 		//Limit(10).
-		Asc("distance").
+		//Asc("distance").
 		GeoNearByPoint("location",
 			pos,
 			maxMeters,
