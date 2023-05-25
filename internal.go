@@ -297,6 +297,47 @@ func (e *Engine) makeFilters() {
 	e.filter = e.replaceObjectID(e.filter)
 }
 
+func (e *Engine) isPipelineKeyExist(key string) bool {
+	for _, pipe := range e.pipeline {
+		for k := range pipe.Map() {
+			if k == key {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (e *Engine) makePipelineSort() bson.D {
+	if e.isPipelineKeyExist(KeySort) {
+		return nil
+	}
+	var sort = bson.D{
+		{KeySort, e.makeSort()},
+	}
+	return sort
+}
+
+func (e *Engine) makePipelineSkip() bson.D {
+	if e.isPipelineKeyExist(KeySkip) {
+		return nil
+	}
+	var skip = bson.D{
+		{KeySkip, e.skip},
+	}
+	return skip
+}
+
+func (e *Engine) makePipelineLimit() bson.D {
+	if e.isPipelineKeyExist(KeyLimit) {
+		return nil
+	}
+	var limit = bson.D{
+		{KeyLimit, e.limit},
+	}
+	return limit
+}
+
 //replaceObjectID replace filter _id string to Str2ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 	assert(filter, "filter cannot be nil")

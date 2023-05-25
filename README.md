@@ -668,6 +668,8 @@ var pos = Coordinate{X: -73.93414657, Y: 40.82302903}
 var restaurants []*Restaurant
 err := e.Model(&restaurants).
         Table("restaurants").
+        Limit(10).
+        Asc("distance").
         GeoNearByPoint(
             "location", //存储经纬度的字段
             pos, //当前位置数据

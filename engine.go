@@ -45,6 +45,7 @@ type Engine struct {
 	updates       bson.M                 // mongodb updates
 	pipeline      mongo.Pipeline         // mongodb pipeline
 	locker        sync.RWMutex           // internal locker
+	isGeoQuery    bool                   // is a GeoNear query?
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -375,12 +376,14 @@ func (e *Engine) Query() (err error) {
 		return log.Errorf("no model to fetch records")
 	}
 	defer e.clean()
+	if e.isGeoQuery {
+		return e.Aggregate()
+	}
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
 	var cur *mongo.Cursor
 	e.makeFilters()
-
 	opts := e.makeFindOptions()
 	e.debugJson("filter", e.filter, "options", opts)
 	cur, err = col.Find(ctx, e.filter, opts...)
@@ -499,10 +502,22 @@ func (e *Engine) Aggregate() (err error) {
 	for _, opt := range e.options {
 		opts = append(opts, opt.(*options.AggregateOptions))
 	}
+
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
 	defer cancel()
 	var cur *mongo.Cursor
+
+	if p := e.makePipelineSort(); p != nil {
+		e.pipeline = append(e.pipeline, p)
+	}
+	if p := e.makePipelineSkip(); p != nil {
+		e.pipeline = append(e.pipeline, p)
+	}
+	if p := e.makePipelineLimit(); p != nil {
+		e.pipeline = append(e.pipeline, p)
+	}
 	e.debugJson("pipeline", e.pipeline)
+
 	if e.strTableName == "" {
 		cur, err = e.db.Aggregate(ctx, e.pipeline, opts...)
 	} else {
@@ -594,7 +609,8 @@ func (e *Engine) GeoNearByPoint(strColumn string, pos Coordinate, maxDistance in
 			columnNameSpherical:     true,
 		}},
 	}
-	e.Pipeline(match, nil)
+	e.Pipeline(match)
+	e.isGeoQuery = true
 	return e
 }
 

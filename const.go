@@ -19,6 +19,7 @@ const (
 	KeyHaving           = "$having"
 	KeyProject          = "$project"
 	KeySort             = "$sort"
+	KeySkip             = "$skip"
 	KeyLimit            = "$limit"
 	KeySum              = "$sum"
 	KeyAll              = "$all"

@@ -76,14 +76,14 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	//Insert(e)
-	//Query(e)
-	//GeoQuery(e)
-	//Update(e)
+	Insert(e)
+	Query(e)
+	GeoQuery(e)
+	Update(e)
 	Upsert(e)
-	//Count(e)
+	Count(e)
 	//Delete(e)
-	//Aggregate(e)
+	Aggregate(e)
 }
 
 func GeoQuery(e *Engine) {
@@ -137,14 +137,20 @@ func GeoQuery(e *Engine) {
 	var restaurants3 []*docRestaurant
 	err = e.Model(&restaurants3).
 		Table(TableNameRestaurants).
+		//Limit(10).
+		Asc("distance").
 		GeoNearByPoint("location",
 			pos,
 			maxMeters,
 			"distance").
-		Aggregate()
-	//for _, restaurant := range restaurants3 {
-	//	log.Debugf("geo near restaurant [%+v]", restaurant)
-	//}
+		Query()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	for _, restaurant := range restaurants3 {
+		log.Debugf("geo near restaurant [%+v]", restaurant)
+	}
 	log.Infof("geo near restaurants total [%d]", len(restaurants3))
 }
 
