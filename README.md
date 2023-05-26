@@ -496,6 +496,53 @@ log.Infof("rows %d deleted", rows)
 SELECT AVG(age) AS age, SUM(1) AS total, SUM(balance) as balance FROM  student_info WHERE sex='female' GROUP BY name, age
 
 ```go
+/*
+	db.getCollection("student_info").aggregate([
+        {
+            "$match":{
+                "sex":"female"
+            },
+        },
+        {
+            "$group":{
+                        "_id":{"name":"$name", "age":"$age"},
+                        "age":{ "$avg":"$age"},
+                        "balance":{ "$sum":"$balance"},
+                        "total":{ "$sum":1}
+            }
+        }
+    ])
+----------------------------------------------------------------------
+{
+    "_id": {
+        "name": "katy3",
+        "age": NumberInt("28")
+    },
+    "age": 28,
+    "balance": NumberDecimal("24149.3374"),
+    "total": 8
+}
+// 2
+{
+    "_id": {
+        "name": "katy3",
+        "age": NumberInt("27")
+    },
+    "age": 27,
+    "balance": NumberDecimal("234"),
+    "total": 1
+}
+// 3
+{
+    "_id": {
+        "name": "rose",
+        "age": NumberInt("18")
+    },
+    "age": 18,
+    "balance": NumberDecimal("520.1314"),
+    "total": 1
+}
+*/
   type AggID struct {
       Name string `bson:"name"`
   }
