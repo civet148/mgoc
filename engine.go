@@ -47,7 +47,7 @@ type Engine struct {
 	updates         bson.M                 // mongodb updates
 	pipeline        mongo.Pipeline         // mongodb pipeline
 	locker          sync.RWMutex           // internal locker
-	isGeoQuery      bool                   // is a GeoNear query?
+	isAggregate     bool                   // is a aggregate query?
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -379,7 +379,7 @@ func (e *Engine) Query() (err error) {
 		return log.Errorf("no model to fetch records")
 	}
 	defer e.clean()
-	if e.isGeoQuery {
+	if e.isAggregate {
 		return e.Aggregate()
 	}
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
@@ -490,6 +490,7 @@ func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
 			e.pipeline = append(e.pipeline, v)
 		}
 	}
+	e.isAggregate = true
 	return e
 }
 
@@ -497,6 +498,7 @@ func (e *Engine) GroupBy(columns ...string) *Engine {
 	if len(columns) == 0 {
 		return e
 	}
+	e.isAggregate = true
 	e.groupByColumns = append(e.groupByColumns, columns...)
 	return e
 }
@@ -612,7 +614,6 @@ func (e *Engine) GeoNearByPoint(strColumn string, pos Coordinate, maxDistance in
 		}},
 	}
 	e.Pipeline(match)
-	e.isGeoQuery = true
 	return e
 }
 

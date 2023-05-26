@@ -576,6 +576,7 @@ func (e *Engine) addGroupCondition(column, key string, values ...interface{}) *E
 	} else {
 		value = fmt.Sprintf("$%s", column)
 	}
+	e.isAggregate = true
 	e.groupConditions[column] = bson.M{key: value}
 	return e
 }

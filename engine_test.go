@@ -391,7 +391,7 @@ func OrmAggregate(e *Engine) {
 		Sum("balance").
 		Eq("sex", "female").
 		GroupBy("name", "age").
-		Aggregate()
+		Query()
 	if err != nil {
 		log.Errorf(err.Error())
 		return
