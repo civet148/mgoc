@@ -532,7 +532,8 @@ func (e *Engine) Aggregate() (err error) {
 		return log.Errorf(err.Error())
 	}
 	defer cur.Close(ctx)
-	err = cur.All(ctx, e.models[0])
+
+	err = e.fetchRows(cur)
 	if err != nil {
 		return log.Errorf(err.Error())
 	}

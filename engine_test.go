@@ -76,12 +76,12 @@ func TestMongoDBCases(t *testing.T) {
 	}
 	//e.Use("test") //switch to other database
 	e.Debug(true)
-	//OrmInsert(e)
-	//OrmQuery(e)
-	//GeoQuery(e)
-	//OrmUpdate(e)
-	//OrmUpsert(e)
-	//OrmCount(e)
+	OrmInsert(e)
+	OrmQuery(e)
+	GeoQuery(e)
+	OrmUpdate(e)
+	OrmUpsert(e)
+	OrmCount(e)
 	//OrmDelete(e)
 	OrmAggregate(e)
 	PipelineAggregate(e)
@@ -234,7 +234,7 @@ func OrmCount(e *Engine) {
 	log.Infof("rows %d", rows)
 }
 
-func Insert(e *Engine) {
+func OrmInsert(e *Engine) {
 	var student = &docStudent{
 		Id:          NewObjectID(),
 		Name:        "john1",
@@ -396,12 +396,10 @@ func OrmAggregate(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
-	log.Infof("aggregate rows %d", len(agg))
+	log.Infof("aggregate records %+v", len(agg))
 	for _, a := range agg {
 		log.Infof("%+v", a)
 	}
-	//db := e.Use("monitor")
-
 }
 
 func PipelineAggregate(e *Engine) {
