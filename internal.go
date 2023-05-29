@@ -586,11 +586,15 @@ func (e *Engine) makePipelineUnwind() bson.D {
 	if e.isPipelineKeyExist(KeyUnwind) {
 		return nil
 	}
-	if e.unwindColumn == "" {
+	if e.unwind == nil {
 		return nil
 	}
+	var value interface{}
+	if s, ok := e.unwind.(string); ok {
+		value = fmt.Sprintf("$%s", s)
+	}
 	var sort = bson.D{
-		{KeyUnwind, fmt.Sprintf("$%s", e.unwindColumn)},
+		{KeyUnwind, value},
 	}
 	return sort
 }
