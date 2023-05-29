@@ -837,12 +837,12 @@ Page(1,10) == LIMIT 1*10, 10
 
 ### Avg("field", values...)
 聚合操作求平均值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
-指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}
+指定字段时Avg("field") 等价于 {"field":{"$avg":"$field"}}
 
 ### Max("field", values...)
 聚合操作取最大值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
-指定字段时Sum("field") 等价于 {"field":{"$max":"$field"}}
+指定字段时Max("field") 等价于 {"field":{"$max":"$field"}}
 
 ### Min("field", values...)
 聚合操作取最小值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
-指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}
+指定字段时Min("field") 等价于 {"field":{"$min":"$field"}}
