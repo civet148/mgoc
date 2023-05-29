@@ -800,49 +800,49 @@ log.Infof("geo near restaurants total [%d]", len(restaurants))
 Page(0,10) == LIMIT 0, 10
 Page(1,10) == LIMIT 1*10, 10
 
-### Ne(value)
+### Ne("field", value)
 等价于 {"field":{"$ne":"value"}}
 
-### Eq/Equal(value)
+### Eq/Equal("field", value)
 等价于 {"field":{"$eq":"value"}}
 
-### Gt(value)
+### Gt("field", value)
 等价于  {"field":{"$gt":value}}
 
-### Gte(value)
+### Gte("field", value)
 等价于  {"field":{"$gte":value}}
 
-### Lt(value)
+### Lt("field", value)
 等价于  {"field":{"$lt":value}}
 
-### Lte(value)
+### Lte("field", value)
 等价于  {"field":{"$lte":value}}
 
-### GtLt(value1, value2)
+### GtLt("field", value1, value2)
 等价于  {"field":{"$gt":value1, "$lt":value2}}
 
-### GteLt(value1, value2)
+### GteLt("field", value1, value2)
 等价于  {"field":{"$gte":value1, "$lt":value2}}
 
-### GteLte(value1, value2)
+### GteLte("field", value1, value2)
 等价于  {"field":{"$gte":value1, "$lte":value2}}
 
-### GtLte(value1, value2)
+### GtLte("field", value1, value2)
 等价于  {"field":{"$gt":value1, "$lte":value2}}
 
-### Sum(filed, values...)
+### Sum("field", values...)
 聚合操作求和, 针对filed做聚合时values可不填，同时values可以是数字也可以是bson.M对象
 指定字段时Sum("field") 等价于 {"field":{"$sum":"$field"}}
 指定计数时Sum("field", 1) 等价于 {"field":{"$sum":1}}
 
-### Avg(filed, values...)
+### Avg("field", values...)
 聚合操作求平均值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
 指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}
 
-### Max(filed, values...)
+### Max("field", values...)
 聚合操作取最大值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
 指定字段时Sum("field") 等价于 {"field":{"$max":"$field"}}
 
-### Min(filed, values...)
+### Min("field", values...)
 聚合操作取最小值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
 指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}
