@@ -480,7 +480,7 @@ func (e *Engine) Limit(n int) *Engine {
 }
 
 func (e *Engine) Id(v interface{}) *Engine {
-	e.filter[defaultPrimaryKeyName] = ToObjectID(v)
+	e.filter[defaultPrimaryKeyName] = MakeObjectID(v)
 	return e
 }
 
