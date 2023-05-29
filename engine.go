@@ -2,6 +2,7 @@ package mgoc
 
 import (
 	"context"
+	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -40,7 +41,7 @@ type Engine struct {
 	groupConditions bson.M                 // Group conditions to query
 	ascColumns      []string               // columns to order by ASC
 	descColumns     []string               // columns to order by DESC
-	groupByColumns  []string               // columns to group by
+	groupByExprs    map[string]interface{} // expressions to group by
 	skip            int64                  // mongodb skip
 	limit           int64                  // mongodb limit
 	filter          bson.M                 // mongodb filter
@@ -92,6 +93,7 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		andConditions:   make(map[string]interface{}),
 		orConditions:    make(map[string]interface{}),
 		groupConditions: make(map[string]interface{}),
+		groupByExprs:    make(map[string]interface{}),
 	}, nil
 }
 
@@ -497,12 +499,28 @@ func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
 	return e
 }
 
-func (e *Engine) GroupBy(columns ...string) *Engine {
-	if len(columns) == 0 {
+func (e *Engine) GroupBy(exprs ...interface{}) *Engine {
+	if len(exprs) == 0 {
 		return e
 	}
 	e.isAggregate = true
-	e.groupByColumns = append(e.groupByColumns, columns...)
+	for _, expr := range exprs {
+		if s, ok := expr.(string); ok {
+			e.groupByExprs[s] = fmt.Sprintf("$%s", s)
+		} else {
+			var ok bool
+			var m map[string]interface{}
+			if m, ok = expr.(bson.M); !ok {
+				if d, ok := expr.(bson.D); ok {
+					m = d.Map()
+				}
+			}
+			for k, v := range m {
+				e.groupByExprs[k] = v
+			}
+		}
+	}
+
 	return e
 }
 

@@ -60,6 +60,7 @@ func (e *Engine) clone(strDatabaseName string, models ...interface{}) *Engine {
 		andConditions:   make(map[string]interface{}),
 		orConditions:    make(map[string]interface{}),
 		groupConditions: make(map[string]interface{}),
+		groupByExprs:    make(map[string]interface{}),
 		db:              e.client.Database(strDatabaseName, opts...),
 	}
 	return engine.setModel(models...)
@@ -646,12 +647,8 @@ func (e *Engine) makePipelineGroup() bson.D {
 	}
 
 	if _, ok := e.groupConditions[defaultPrimaryKeyName]; !ok {
-		if len(e.groupByColumns) != 0 {
-			var ids = bson.M{}
-			for _, col := range e.groupByColumns {
-				ids[col] = fmt.Sprintf("$%s", col)
-			}
-			e.groupConditions[defaultPrimaryKeyName] = ids
+		if len(e.groupByExprs) != 0 {
+			e.groupConditions[defaultPrimaryKeyName] = e.groupByExprs
 		} else {
 			e.groupConditions[defaultPrimaryKeyName] = nil
 		}
