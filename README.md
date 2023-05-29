@@ -353,7 +353,7 @@ UPDATE student_info SET name='kary', sex='female', age=39, balance='123.456', cr
 ```go
 // 更新Id值6438f32fd71fc42e601558aa对应的数据记录
 var student = &Student{
-		Id:          mgoc.ToObjectID("6438f32fd71fc42e601558aa").(mgoc.ObjectID),
+		Id:          mgoc.MakeObjectID("6438f32fd71fc42e601558aa").(mgoc.ObjectID),
 		Name:        "kary",
 		Sex:         "female",
 		Age:         39,
