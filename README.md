@@ -114,8 +114,8 @@ root@072bedc2e6c5:/tmp# mongo
 
 ## 快速开始
 
-- 所有的ORM操作必须是以Model方法开始,参数除执行delete操作之外都是必填
-- TableName方法通常情况下也是必须调用的方法（除了数据库层面的聚合操作）
+- 所有的ORM操作必须是以Model方法开始,参数除执行delete/update操作之外都是必填
+- Table方法通常情况下也是必须调用的方法（除了数据库层面的聚合操作）
 
 ```go
 package main
