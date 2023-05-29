@@ -775,3 +775,74 @@ log.Infof("geo near restaurants total [%d]", len(restaurants))
   db := e.Use("test2")
 ```
 
+## 部分ORM方法说明
+
+### FindOne
+查找一条记录
+
+### UpdateOne
+只更新一条记录
+
+### FindOneUpdate
+查找一条记录并更新
+
+### FindOneReplace
+查找一条记录并替换
+
+### FindOneDelete
+查找一条记录并删除
+
+### Pipeline(args...)
+流水线方法，当使用该方法时会忽略ORM的其他聚合操作(GroupBy/Sum/Avg/Min/Max...)
+
+### Page(no, size)
+分页查询，仅QueryEx执行有效.
+Page(0,10) == LIMIT 0, 10
+Page(1,10) == LIMIT 1*10, 10
+
+### Ne(value)
+等价于 {"field":{"$ne":"value"}}
+
+### Eq/Equal(value)
+等价于 {"field":{"$eq":"value"}}
+
+### Gt(value)
+等价于  {"field":{"$gt":value}}
+
+### Gte(value)
+等价于  {"field":{"$gte":value}}
+
+### Lt(value)
+等价于  {"field":{"$lt":value}}
+
+### Lte(value)
+等价于  {"field":{"$lte":value}}
+
+### GtLt(value1, value2)
+等价于  {"field":{"$gt":value1, "$lt":value2}}
+
+### GteLt(value1, value2)
+等价于  {"field":{"$gte":value1, "$lt":value2}}
+
+### GteLte(value1, value2)
+等价于  {"field":{"$gte":value1, "$lte":value2}}
+
+### GtLte(value1, value2)
+等价于  {"field":{"$gt":value1, "$lte":value2}}
+
+### Sum(filed, values...)
+聚合操作求和, 针对filed做聚合时values可不填，同时values可以是数字也可以是bson.M对象
+指定字段时Sum("field") 等价于 {"field":{"$sum":"$field"}}
+指定计数时Sum("field", 1) 等价于 {"field":{"$sum":1}}
+
+### Avg(filed, values...)
+聚合操作求平均值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
+指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}
+
+### Max(filed, values...)
+聚合操作取最大值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
+指定字段时Sum("field") 等价于 {"field":{"$max":"$field"}}
+
+### Min(filed, values...)
+聚合操作取最小值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
+指定字段时Sum("field") 等价于 {"field":{"$min":"$field"}}

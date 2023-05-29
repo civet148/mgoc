@@ -429,7 +429,7 @@ func (e *Engine) Count() (rows int64, err error) {
 
 // QueryEx orm query and return total records count
 // return total and error, if err is not nil must be something wrong
-// NOTE: Model function is must be called before call this function
+// NOTE: Model function is must be called before call this function, do not call this on aggregate operations
 func (e *Engine) QueryEx() (total int64, err error) {
 	assert(e.models, "query model is nil")
 	assert(e.strTableName, "table name not set")
@@ -499,6 +499,7 @@ func (e *Engine) Pipeline(pipelines ...bson.D) *Engine {
 	return e
 }
 
+// GroupBy group by expressions with string, bson.M and bson.D
 func (e *Engine) GroupBy(exprs ...interface{}) *Engine {
 	if len(exprs) == 0 {
 		return e
