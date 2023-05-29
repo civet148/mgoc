@@ -435,6 +435,9 @@ func (e *Engine) QueryEx() (total int64, err error) {
 		return 0, log.Errorf("no model to fetch records")
 	}
 	defer e.clean()
+	if e.isAggregate {
+		log.Panic("this is an aggregate query, please use Aggregate method instead")
+	}
 	ctx, cancel := ContextWithTimeout(e.engineOpt.ReadTimeout)
 	defer cancel()
 	col := e.Collection(e.strTableName)
