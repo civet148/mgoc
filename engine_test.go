@@ -185,9 +185,10 @@ func OrmQuery(e *Engine) {
 	var total int64
 	var students2 []*docStudent
 	total, err = e.Model(&students2).
+		Table(TableNameStudentInfo).
 		Select("name", "sex", "balance", "created_time").
 		Options(&options.FindOptions{}).
-		Table(TableNameStudentInfo).
+		Round("balance", 1).
 		Page(0, 5).
 		QueryEx()
 	if err != nil {
@@ -389,6 +390,7 @@ func OrmAggregate(e *Engine) {
 		Avg("age").
 		Sum("total", 1).
 		Sum("balance").
+		Round("balance", 1).
 		Eq("sex", "female").
 		GroupBy("name", "age").
 		Query()

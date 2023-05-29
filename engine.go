@@ -23,6 +23,12 @@ type Option struct {
 	DatabaseOpt    *options.DatabaseOptions // database options
 }
 
+type roundProject struct {
+	Column string
+	AS     string
+	Place  int //-20 ~ 100
+}
+
 type Engine struct {
 	debug           bool                   // enable debug mode
 	engineOpt       *Option                // option for the engine
@@ -50,6 +56,7 @@ type Engine struct {
 	pipeline        mongo.Pipeline         // mongodb pipeline
 	locker          sync.RWMutex           // internal locker
 	isAggregate     bool                   // is a aggregate query?
+	roundColumns    []*roundProject        // round columns and places
 }
 
 func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
@@ -861,20 +868,38 @@ func (e *Engine) Page(pageNo, pageSize int) *Engine {
 	return e
 }
 
+// Sum aggregation sum number for $group
 func (e *Engine) Sum(strColumn string, values ...interface{}) *Engine {
 	return e.addGroupCondition(strColumn, KeySum, values...)
 }
 
+// Avg aggregation avg number for $group
 func (e *Engine) Avg(strColumn string, values ...interface{}) *Engine {
 	return e.addGroupCondition(strColumn, KeyAvg, values...)
 }
 
+// Max aggregation max number for $group
 func (e *Engine) Max(strColumn string, values ...interface{}) *Engine {
 	return e.addGroupCondition(strColumn, KeyMax, values...)
 }
 
+// Min aggregation min number for $group
 func (e *Engine) Min(strColumn string, values ...interface{}) *Engine {
 	return e.addGroupCondition(strColumn, KeyMin, values...)
+}
+
+// Round aggregation round number for $project, place number range -20 ~ 100
+func (e *Engine) Round(strColumn string, place int, alias ...string) *Engine {
+	var strAS = strColumn
+	if len(alias) != 0 {
+		strAS = alias[0]
+	}
+	e.roundColumns = append(e.roundColumns, &roundProject{
+		Column: strColumn,
+		AS:     strAS,
+		Place:  place,
+	})
+	return e
 }
 
 // Unwind obj param is a string or bson object

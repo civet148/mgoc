@@ -38,6 +38,7 @@ const (
 	KeyMod              = "$mod"
 	KeyAbs              = "$abs"
 	KeyUnwind           = "$unwind"
+	KeyRound            = "$round"
 )
 
 const (

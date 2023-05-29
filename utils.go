@@ -2,6 +2,7 @@ package mgoc
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/civet148/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -170,6 +171,15 @@ func ToLower(expr interface{}) bson.M {
 func ToUpper(expr interface{}) bson.M {
 	return bson.M{
 		toUpper: expr,
+	}
+}
+
+func RoundColumn(strColumn string, place int) bson.M {
+	return bson.M{
+		KeyRound: bson.A{
+			fmt.Sprintf("$%s", strColumn),
+			place,
+		},
 	}
 }
 

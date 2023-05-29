@@ -270,6 +270,9 @@ func (e *Engine) makeProjection() bson.M {
 	for _, v := range e.selectColumns {
 		projection[v] = 1
 	}
+	for _, v := range e.roundColumns {
+		projection[v.AS] = RoundColumn(v.Column, v.Place)
+	}
 	return projection
 }
 
