@@ -582,6 +582,19 @@ func (e *Engine) addGroupCondition(column, key string, values ...interface{}) *E
 	return e
 }
 
+func (e *Engine) makePipelineUnwind() bson.D {
+	if e.isPipelineKeyExist(KeyUnwind) {
+		return nil
+	}
+	if e.unwindColumn == "" {
+		return nil
+	}
+	var sort = bson.D{
+		{KeyUnwind, fmt.Sprintf("$%s", e.unwindColumn)},
+	}
+	return sort
+}
+
 func (e *Engine) makePipelineSort() bson.D {
 	if e.isPipelineKeyExist(KeySort) {
 		return nil
@@ -591,7 +604,7 @@ func (e *Engine) makePipelineSort() bson.D {
 		return nil
 	}
 	var sort = bson.D{
-		{KeySort, e.makeSort()},
+		{KeySort, s},
 	}
 	return sort
 }
@@ -704,5 +717,8 @@ func (e *Engine) makeGroupByPipelines() *Engine {
 		pipelines = append(pipelines, p)
 	}
 
+	if p := e.makePipelineUnwind(); p != nil {
+		pipelines = append(pipelines, p)
+	}
 	return e.Pipeline(pipelines...)
 }

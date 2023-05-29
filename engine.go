@@ -41,6 +41,7 @@ type Engine struct {
 	groupConditions bson.M                 // Group conditions to query
 	ascColumns      []string               // columns to order by ASC
 	descColumns     []string               // columns to order by DESC
+	unwindColumn    string                 // column to unwind
 	groupByExprs    map[string]interface{} // expressions to group by
 	skip            int64                  // mongodb skip
 	limit           int64                  // mongodb limit
@@ -874,4 +875,9 @@ func (e *Engine) Max(strColumn string, values ...interface{}) *Engine {
 
 func (e *Engine) Min(strColumn string, values ...interface{}) *Engine {
 	return e.addGroupCondition(strColumn, KeyMin, values...)
+}
+
+func (e *Engine) Unwind(strColumn string) *Engine {
+	e.unwindColumn = strColumn
+	return e
 }

@@ -37,6 +37,7 @@ const (
 	KeyAvg              = "$avg"
 	KeyMod              = "$mod"
 	KeyAbs              = "$abs"
+	KeyUnwind           = "$unwind"
 )
 
 const (
