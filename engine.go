@@ -878,6 +878,7 @@ func (e *Engine) Min(strColumn string, values ...interface{}) *Engine {
 }
 
 func (e *Engine) Unwind(strColumn string) *Engine {
+	e.isAggregate = true
 	e.unwindColumn = strColumn
 	return e
 }
