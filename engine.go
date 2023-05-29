@@ -115,6 +115,14 @@ func ContextWithTimeout(timeoutSeconds int) (context.Context, context.CancelFunc
 	return context.WithTimeout(context.Background(), time.Duration(timeoutSeconds)*time.Second)
 }
 
+func (e *Engine) SetReadTimeout(timeoutSeconds int) {
+	e.engineOpt.ReadTimeout = timeoutSeconds
+}
+
+func (e *Engine) SetWriteTimeout(timeoutSeconds int) {
+	e.engineOpt.WriteTimeout = timeoutSeconds
+}
+
 func (e *Engine) Close() error {
 	return e.client.Disconnect(context.TODO())
 }
