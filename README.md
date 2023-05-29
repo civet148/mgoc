@@ -801,10 +801,10 @@ Page(0,10) == LIMIT 0, 10
 Page(1,10) == LIMIT 1*10, 10
 
 ### Ne("field", value)
-等价于 {"field":{"$ne":"value"}}
+等价于 {"field":{"$ne":value}}
 
 ### Eq/Equal("field", value)
-等价于 {"field":{"$eq":"value"}}
+等价于 {"field":{"$eq":value}}
 
 ### Gt("field", value)
 等价于  {"field":{"$gt":value}}
