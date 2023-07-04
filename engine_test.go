@@ -50,7 +50,7 @@ type docNeighborhood struct {
 
 const (
 	officialObjectId = "6438f32fd71fc42e601558aa"
-	defaultMongoUrl  = "mongodb://root:123456@192.168.2.146:27017/test?authSource=admin"
+	defaultMongoUrl  = "mongodb://root:123456@192.168.2.9:27017/test?authSource=admin"
 )
 
 var opt = &Option{
@@ -82,7 +82,7 @@ func TestMongoDBCases(t *testing.T) {
 	OrmUpdate(e)
 	OrmUpsert(e)
 	OrmCount(e)
-	//OrmDelete(e)
+	OrmDelete(e)
 	OrmAggregate(e)
 	PipelineAggregate(e)
 }
@@ -352,6 +352,28 @@ func OrmUpsert(e *Engine) {
 		log.Errorf(err.Error())
 		return
 	}
+	//使用数据模型进行upsert操作
+	oid, err := NewObjectIDFromString(officialObjectId)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
+	var student = &docStudent{
+		Id:          oid,
+		Name:        "rose",
+		Sex:         "female",
+		Age:         18,
+		Balance:     NewDecimal("123.456"),
+		CreatedTime: time.Now(),
+	}
+	_, err = e.Model(&student).
+		Table(TableNameStudentInfo).
+		Select("balance").
+		Upsert()
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	}
 }
 
 func OrmDelete(e *Engine) {
@@ -363,7 +385,7 @@ func OrmDelete(e *Engine) {
 		//	"name": "lory2",
 		//	"age":  18,
 		//}).
-		Id(officialObjectId).
+		Id("6438f32fd71fc42e611038fb").
 		Delete()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -441,8 +463,8 @@ func PipelineAggregate(e *Engine) {
 	match := bson.D{
 		{
 			"$match", bson.M{
-				"sex": "female",
-			},
+			"sex": "female",
+		},
 		},
 	}
 	// create group stage
@@ -456,10 +478,10 @@ func PipelineAggregate(e *Engine) {
 	project := bson.D{
 		{
 			"$project", bson.M{
-				"_id":   0,
-				"age":   1,
-				"total": 1,
-			},
+			"_id":   0,
+			"age":   1,
+			"total": 1,
+		},
 		},
 	}
 	err := e.Model(&agg).

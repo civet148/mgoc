@@ -466,6 +466,29 @@ if err != nil {
     log.Errorf(err.Error())
     return
 }
+
+//使用数据模型进行upsert操作(如果已id对应数据存在则更新balance)
+oid, err := mgoc.NewObjectIDFromString("6438f32fd71fc42e601558aa")
+if err != nil {
+  log.Errorf(err.Error())
+  return
+}
+var student = &docStudent{
+    Id:          oid,
+    Name:        "rose",
+    Sex:         "female",
+    Age:         18,
+    Balance:     NewDecimal("123.456"),
+    CreatedTime: time.Now(),
+}
+_, err = e.Model(&student).
+          Table(TableNameStudentInfo).
+          Select("balance").
+          Upsert()
+if err != nil {
+  log.Errorf(err.Error())
+  return
+}
 ```
 
 
