@@ -127,14 +127,20 @@ import (
     "go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type ExtraData struct {
+  IdCard      string   `bson:"id_card"`
+  Address     string   `bson:"address"`
+}
+
 type Student struct {
-      Id          string            `bson:"_id,omitempty"`
-      Name        string            `bson:"name"`
-      Sex         string            `bson:"sex"`
-      Age         int               `bson:"age"`
-      Balance     mgoc.Decimal      `bson:"balance"`
-      ClassNo     string            `bson:"class_no"`
-      CreatedTime time.Time         `bson:"created_time"`
+  Id          string          `bson:"_id,omitempty"`
+  Name        string          `bson:"name"`
+  Sex         string          `bson:"sex"`
+  Age         int             `bson:"age"`
+  ClassNo     string          `bson:"class_no"`
+  Balance     mgoc.Decimal    `bson:"balance"`
+  CreatedTime time.Time       `bson:"created_time"`
+  ExtraData   ExtraData       `bson:"extra_data"`
 }
 
 func main() {
@@ -391,28 +397,8 @@ if err != nil {
 - **结构嵌套更新**
 
 ```go
-type ExtraData struct {
-    IdCard      string   `bson:"id_card"`
-    Address     string   `bson:"address"`
-}
-
-type Student struct {
-    Id          string          `bson:"_id,omitempty"`
-    Name        string          `bson:"name"`
-    Sex         string          `bson:"sex"`
-    Age         int             `bson:"age"`
-    ClassNo     string          `bson:"class_no"`
-    Balance     mgoc.Decimal    `bson:"balance"`
-    CreatedTime time.Time       `bson:"created_time"`
-    ExtraData   ExtraData       `bson:"extra_data"`
-}
-oid, err := mgoc.NewObjectIDFromString("6438f32fd71fc42e601558aa")
-if err != nil {
-    log.Errorf(err.Error())
-    return
-}
 var student = &Student{
-        Id:          oid,
+        Id:          "6438f32fd71fc42e601558aa",
         ClassNo:     "CLASS-3",
         ExtraData:   ExtraData {
             IdCard: "6553239109322",
@@ -449,8 +435,6 @@ if err != nil {
 
 ## 更新或插入
 
-
-
 ```go
 var err error
 _, err = e.Model().
@@ -468,13 +452,8 @@ if err != nil {
 }
 
 //使用数据模型进行upsert操作(如果已id对应数据存在则更新balance)
-oid, err := mgoc.NewObjectIDFromString("6438f32fd71fc42e601558aa")
-if err != nil {
-  log.Errorf(err.Error())
-  return
-}
 var student = &docStudent{
-    Id:          oid,
+    Id:          "6438f32fd71fc42e601558aa",
     Name:        "rose",
     Sex:         "female",
     Age:         18,
