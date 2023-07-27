@@ -452,7 +452,7 @@ if err != nil {
 }
 
 //使用数据模型进行upsert操作(如果已id对应数据存在则更新balance)
-var student = &docStudent{
+var student = &Student{
     Id:          "6438f32fd71fc42e601558aa",
     Name:        "rose",
     Sex:         "female",
