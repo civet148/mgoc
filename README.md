@@ -547,6 +547,7 @@ SELECT AVG(age) AS age, SUM(1) AS total, SUM(balance) as balance FROM  student_i
 */
   type AggID struct {
       Name string `bson:"name"`
+      Female string `bson:"female"`
   }
   type StudentAgg struct {
     ID    AggID             `bson:"_id"`

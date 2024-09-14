@@ -860,10 +860,14 @@ func (e *Engine) Array(strColumn string, value []interface{}) *Engine {
 	return e
 }
 
+// Page page no and size must both greater than 0
 func (e *Engine) Page(pageNo, pageSize int) *Engine {
-	if pageSize != 0 {
+        if pageNo <= 0 || pageSize <= 0 {
+           return e
+	}
+	if pageSize > 0 {
 		e.limit = int64(pageSize)
-		e.skip = int64(pageSize * pageNo)
+		e.skip = int64(pageSize * (pageNo-1))
 	}
 	return e
 }
