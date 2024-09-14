@@ -72,6 +72,7 @@ func (e *Engine) debugJson(args ...interface{}) {
 }
 
 func (e *Engine) setModel(models ...interface{}) *Engine {
+	var strCamelTableName string
 	for _, v := range models {
 		if v == nil {
 			continue
@@ -101,6 +102,8 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 		if isStructPtrPtr {
 			e.models = append(e.models, val.Interface())
 			e.setModelType(ModelType_Struct)
+			typSt := typ.Elem()
+			strCamelTableName = typSt.Name()
 		} else {
 			switch typ.Kind() {
 			case reflect.Struct: // struct
@@ -116,6 +119,11 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 				modelVal := reflect.ValueOf(v)
 				elemTyp := modelVal.Type().Elem()
 				elemVal := reflect.New(elemTyp).Elem()
+				typSt := elemVal.Type().Elem()
+				if typSt.Kind() == reflect.Ptr {
+					typSt = typSt.Elem()
+					strCamelTableName = typSt.Name()
+				}
 				if typ.Kind() == reflect.Slice && val.IsNil() {
 					val.Set(reflect.MakeSlice(elemVal.Type(), 0, 0))
 					if len(e.models) == 0 && len(models) != 0 { //used to fetch records
@@ -127,12 +135,17 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 					}
 				}
 			} else if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
+				strCamelTableName = typ.Name()
 				e.models = append(e.models, v) //map, struct or slice
 			} else {
 				e.models = models //built-in type int/string/float32...
 			}
 		}
 
+		if strCamelTableName != "" {
+			name := convertCamelToSnake(strCamelTableName)
+			e.setTableName(strings.ToLower(name))
+		}
 		//var selectColumns []string
 		e.dict = newReflector(e, e.models).ToMap()
 		break //only check first argument
