@@ -63,7 +63,7 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 	var opt = makeOption(opts...)
 	ctx, cancel := ContextWithTimeout(opt.ConnectTimeout)
 	defer cancel()
-	if opt != nil && opt.SSH != nil {
+	if opt.SSH != nil {
 		var err error
 		strDSN, err = opt.SSH.openSSHTunnel(strDSN)
 		if err != nil {
@@ -84,7 +84,7 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		db = client.Database(ui.Database)
 	}
 	var debug bool
-	if opt != nil && opt.Debug {
+	if opt.Debug {
 		debug = true
 	}
 	return &Engine{
@@ -862,12 +862,9 @@ func (e *Engine) Array(strColumn string, value []interface{}) *Engine {
 
 // Page page no and size must both greater than 0
 func (e *Engine) Page(pageNo, pageSize int) *Engine {
-        if pageNo <= 0 || pageSize <= 0 {
-           return e
-	}
-	if pageSize > 0 {
+	if pageNo > 0 && pageSize > 0 {
 		e.limit = int64(pageSize)
-		e.skip = int64(pageSize * (pageNo-1))
+		e.skip = int64(pageSize * (pageNo - 1))
 	}
 	return e
 }
@@ -912,3 +909,4 @@ func (e *Engine) Unwind(obj interface{}) *Engine {
 	e.unwind = obj
 	return e
 }
+

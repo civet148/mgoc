@@ -282,7 +282,7 @@ total, err := e.Model(&students).
         Select("_id", "name", "age", "sex").
         Options(&options.FindOptions{}).
         Desc("created_time").
-        Page(0, 10). //Page(2, 10) == LIMIT 2*10, 10
+        Page(1, 10).
         QueryEx()
 if err != nil {
     log.Errorf(err.Error())
@@ -849,3 +849,4 @@ Page(1,10) == LIMIT 1*10, 10
 ### Min("field", values...)
 聚合操作取最小值, 针对filed做聚合时values可不填，同时values也可以是bson.M对象
 指定字段时Min("field") 等价于 {"field":{"$min":"$field"}}
+
