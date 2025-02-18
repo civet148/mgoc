@@ -800,8 +800,7 @@ log.Infof("geo near restaurants total [%d]", len(restaurants))
 
 ### Page(no, size)
 分页查询，仅QueryEx执行有效.
-Page(0,10) == LIMIT 0, 10
-Page(1,10) == LIMIT 1*10, 10
+Page(1,10) == LIMIT 0, 10
 
 ### Ne("field", value)
 等价于 {"field":{"$ne":value}}
