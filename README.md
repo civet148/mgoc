@@ -772,11 +772,41 @@ for _, restaurant := range restaurants {
 log.Infof("geo near restaurants total [%d]", len(restaurants))
 ```
 
+## 获取数据库对象
+
+- Use方法
+```go
+  e, err := mgoc.NewEngine("mongodb://root:123456@127.0.0.1:27017/test?authSource=admin")
+  if err != nil {
+    log.Errorf(err.Error())
+    return
+  }
+  db := e.Database()
+```
+
 ## 切换数据库
 
+- **Use**方法
 ```go
+  e, err := mgoc.NewEngine("mongodb://root:123456@127.0.0.1:27017/test?authSource=admin")
+  if err != nil {
+    log.Errorf(err.Error())
+    return
+  }
   db := e.Use("test2")
 ```
+
+## 获取Collection对象
+```go
+  e, err := mgoc.NewEngine("mongodb://root:123456@127.0.0.1:27017/test?authSource=admin")
+  if err != nil {
+    log.Errorf(err.Error())
+    return
+  }
+  col := e.Collection()
+  _ = col
+```
+
 
 ## 部分ORM方法说明
 
