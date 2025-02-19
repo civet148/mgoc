@@ -774,7 +774,7 @@ log.Infof("geo near restaurants total [%d]", len(restaurants))
 
 ## 获取数据库对象
 
-- Use方法
+- Database方法
 ```go
   e, err := mgoc.NewEngine("mongodb://root:123456@127.0.0.1:27017/test?authSource=admin")
   if err != nil {
