@@ -17,7 +17,7 @@ $ docker run -p 27017:27017 --restart always -v /data/mongodb/db:/data/db --name
 账户: root 密码: 123456
 
 ```shell
-$ docker exec -it mongodb mongo admin
+$ docker exec -it mongodb mongo
 > use admin
 > db.createUser({user:"root", pwd: "123456", roles: ["root"]})
 > exit
@@ -114,8 +114,8 @@ root@072bedc2e6c5:/tmp# mongo
 
 ## 快速开始
 
-- 所有的ORM操作必须是以Model方法开始,参数除执行delete/update操作之外都是必填
-- Table方法通常情况下也是必须调用的方法（除了数据库层面的聚合操作）
+- 所有的ORM操作必须是以Model方法开始,执行delete/update操作允许不传参
+- Model方法会通过传入的模型结构体名称自动识别数据表名（小写蛇形），也可以通过Table方法指定表名。除了数据库层面的聚合操作不需要指定表名，其他操作都需要指定表名。
 
 ```go
 package main

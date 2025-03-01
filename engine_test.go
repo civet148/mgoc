@@ -50,7 +50,7 @@ type docNeighborhood struct {
 
 const (
 	officialObjectId = "6438f32fd71fc42e601558aa"
-	defaultMongoUrl  = "mongodb://root:123456@192.168.2.9:27017/test?authSource=admin"
+	defaultMongoUrl  = "mongodb://root:123456@127.0.0.1:27017/test?authSource=admin"
 )
 
 var opt = &Option{
