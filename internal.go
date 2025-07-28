@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+type Tabler interface {
+	TableName() string
+}
+
 type ModelType int
 
 const (
@@ -122,6 +126,11 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 				typSt := elemVal.Type().Elem()
 				if typSt.Kind() == reflect.Ptr {
 					typSt = typSt.Elem()
+				}
+				valSt := reflect.New(typSt)
+				if tabler, ok := valSt.Interface().(Tabler); ok {
+					e.setTableName(tabler.TableName())
+				} else {
 					strCamelTableName = typSt.Name()
 				}
 				if typ.Kind() == reflect.Slice && val.IsNil() {
@@ -135,7 +144,12 @@ func (e *Engine) setModel(models ...interface{}) *Engine {
 					}
 				}
 			} else if typ.Kind() == reflect.Struct || typ.Kind() == reflect.Map {
-				strCamelTableName = typ.Name()
+				valSt := reflect.New(typ)
+				if tabler, ok := valSt.Interface().(Tabler); ok {
+					e.setTableName(tabler.TableName())
+				} else {
+					strCamelTableName = typ.Name()
+				}
 				e.models = append(e.models, v) //map, struct or slice
 			} else {
 				e.models = models //built-in type int/string/float32...
@@ -213,7 +227,7 @@ func (e *Engine) clean() {
 	e.filter = make(map[string]interface{})
 }
 
-//assert bool and string/struct/slice/map nil, call panic
+// assert bool and string/struct/slice/map nil, call panic
 func assert(v interface{}, message string) {
 	if isNilOrFalse(v) {
 		log.Panic(message)
@@ -327,7 +341,7 @@ func (e *Engine) isPipelineKeyExist(key string) bool {
 	return false
 }
 
-//replaceObjectID replace filter _id string to Str2ObjectID
+// replaceObjectID replace filter _id string to Str2ObjectID
 func (e *Engine) replaceObjectID(filter bson.M) bson.M {
 	assert(filter, "filter cannot be nil")
 	for k, v := range filter {
@@ -378,7 +392,7 @@ func (e *Engine) makeUpdates() {
 	e.makePrimaryKeyUpdates()
 }
 
-//makePrimaryKeyUpdates make primary column for filter
+// makePrimaryKeyUpdates make primary column for filter
 func (e *Engine) makePrimaryKeyUpdates() {
 	for k, v := range e.dict {
 		if k == e.PrimaryKey() && v != nil {
@@ -387,7 +401,7 @@ func (e *Engine) makePrimaryKeyUpdates() {
 	}
 }
 
-//makeSelectUpdates make selected columns to update
+// makeSelectUpdates make selected columns to update
 func (e *Engine) makeSelectUpdates() {
 	if len(e.selectColumns) == 0 {
 		for k, v := range e.dict {
@@ -406,7 +420,7 @@ func (e *Engine) makeSelectUpdates() {
 	}
 }
 
-//makeExceptUpdates make except columns to update
+// makeExceptUpdates make except columns to update
 func (e *Engine) isExcepted(col string) (ok bool) {
 	_, ok = e.exceptColumns[col]
 	return ok
