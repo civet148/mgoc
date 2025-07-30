@@ -53,23 +53,23 @@ const (
 	defaultMongoUrl  = "mongodb://root:123456@127.0.0.1:27017/test?authSource=admin"
 )
 
-var opt = &Option{
-	Debug: true,
-	Max:   100,
-	Idle:  5,
-	//SSH: &SSH{
-	//	User:     "root",
-	//	Password: "123456",
-	//	Host:     "192.168.2.19:22",
-	//},
-	ConnectTimeout: 3,
-	WriteTimeout:   60,
-	ReadTimeout:    60,
-	DatabaseOpt:    nil,
-}
-
 func TestMongoDBCases(t *testing.T) {
-	e, err := NewEngine(defaultMongoUrl, opt)
+
+	var opts = []Option{
+		WithDebug(),
+		WithMaxConn(100),
+		WithIdleConn(2),
+		WithConnectTimeout(3),
+		WithWriteTimeout(60),
+		WithReadTimeout(60),
+		//WithSSH(&SSH{
+		//	User:     "root",
+		//	Password: "123456",
+		//	Host:     "192.168.2.19:22",
+		//}),
+	}
+
+	e, err := NewEngine(defaultMongoUrl, opts...)
 	if err != nil {
 		log.Errorf(err.Error())
 		return

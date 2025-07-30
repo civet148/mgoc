@@ -12,17 +12,6 @@ import (
 	"time"
 )
 
-type Option struct {
-	Debug          bool                     // enable debug mode
-	Max            int                      // max active connections
-	Idle           int                      // max idle connections
-	SSH            *SSH                     // SSH tunnel server config
-	ConnectTimeout int                      // connect timeout
-	WriteTimeout   int                      // write timeout seconds
-	ReadTimeout    int                      // read timeout seconds
-	DatabaseOpt    *options.DatabaseOptions // database options
-}
-
 type roundProject struct {
 	Column string
 	AS     string
@@ -31,7 +20,7 @@ type roundProject struct {
 
 type Engine struct {
 	debug           bool                   // enable debug mode
-	engineOpt       *Option                // option for the engine
+	engineOpt       *dialOption            // option for the engine
 	options         []interface{}          // mongodb operation options (find/update/delete/insert...)
 	client          *mongo.Client          // mongodb client
 	db              *mongo.Database        // database instance
@@ -59,7 +48,7 @@ type Engine struct {
 	roundColumns    []*roundProject        // round columns and places
 }
 
-func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
+func NewEngine(strDSN string, opts ...Option) (*Engine, error) {
 	var opt = makeOption(opts...)
 	ctx, cancel := ContextWithTimeout(opt.ConnectTimeout)
 	defer cancel()
@@ -103,20 +92,6 @@ func NewEngine(strDSN string, opts ...*Option) (*Engine, error) {
 		groupConditions: make(map[string]interface{}),
 		groupByExprs:    make(map[string]interface{}),
 	}, nil
-}
-
-func makeOption(opts ...*Option) *Option {
-	var opt *Option
-	if len(opts) != 0 {
-		opt = opts[0]
-	} else {
-		opt = &Option{
-			ConnectTimeout: defaultConnectTimeoutSeconds,
-			WriteTimeout:   defaultWriteTimeoutSeconds,
-			ReadTimeout:    defaultReadTimeoutSeconds,
-		}
-	}
-	return opt
 }
 
 func ContextWithTimeout(timeoutSeconds int) (context.Context, context.CancelFunc) {
@@ -909,4 +884,3 @@ func (e *Engine) Unwind(obj interface{}) *Engine {
 	e.unwind = obj
 	return e
 }
-
